@@ -1,0 +1,236 @@
+{{define "content"}}
+<div class="section-wrapper">
+	<div class="please-wait hide section">
+		<div class="please-wait-box">
+			Just a moment...
+		</div>
+	</div>
+	<div class="intro section">
+		<div class="box padded">
+			Hello! The site you're on wishes to confirm your Minecraft account.<br>
+			In order to do this, I need to ask you a few questions.
+		</div>
+		<div class="main padded">
+			<div class="no-such-user error hide"><strong>Whoops!</strong> I couldn't find a Minecraft user with that username. Sorry about that.</div>
+			<form class="pure-form pure-form-stacked">
+				<fieldset>
+					<div class="pure-control-group">
+						<label for="mcusername">What's your Minecraft username?</label>
+						<input type="text" name="mcusername" id="mcusername" value="{{.MCUser}}" class="pure-input-1" autofocus></label>
+					</div>
+					<div class="pure-controls">
+						<button type="submit" class="pure-button pure-button-primary">Next</button>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+	<div class="pick-a-pass section hide">
+		<div class="box padded">
+			I see you haven't done this before.<br>
+			Please pick a password <strong>that is not the same as the one used for your Mojang account or the site from which you came</strong>.<br>
+			You'll be able to use this if you need to complete this process again.
+		</div>
+		<div class="main padded">
+			<form class="pure-form pure-form-stacked">
+				<fieldset>
+					<div class="pure-control-group">
+						<label for="new-password">Pick a Minecraft Associator password:</label>
+						<input type="password" name="new-password" id="new-password" class="pure-input-1"></label>
+					</div>
+					<div class="pure-controls">
+						<button type="submit" class="pure-button pure-button-primary">Next</button>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+	<div class="enter-pass section hide">
+		<div class="box padded">
+			<strong>Welcome back!</strong> I see you've done this before, either here or on a different site.<br>
+			To continue, simply enter your Minecraft Associator password.
+		</div>
+		<div class="main padded">
+			<div class="password-incorrect error hide"><strong>Whoops!</strong> I don't think that was correct. If you can't remember what it was, or you haven't associated your account before, please click <a href="javascript:;" class="forgotten">I've forgotten it</a>.</div>
+			<form class="pure-form pure-form-stacked">
+				<fieldset>
+					<div class="pure-control-group">
+						<label for="password">Enter your Minecraft Associator password:</label>
+						<input type="password" name="password" id="password" class="pure-input-1"></label>
+					</div>
+					<div class="pure-controls">
+						<button type="submit" class="pure-button pure-button-primary">Next</button>
+					</div>
+				</fieldset>
+			</form>
+			<a href="javascript:;" class="forgotten">I've forgotten it/I haven't done this before</a>
+		</div>
+	</div>
+	<div class="change-skin section hide">
+		<div class="box padded">
+			<strong>Last step!</strong> You're almost done.<br>
+			To verify your Minecraft account, I need you to change your skin.<br>
+			Just click the button below and you'll be taken to Minecraft.net - just log in, and accept the skin change.<br><br>
+			If you keep your skin the same, then the next time you try to associate your account with a website, I'll just ask you for the password you just set, and away we go!
+		</div>
+		<div class="main padded">
+			<a href="" class="pure-button pure-button-primary" target="_blank">Change my Minecraft skin</a><br>
+			<br>
+			Once you're done, just close the window and I'll complete the process. It may take a few seconds once you've accepted the skin change, but I'll try to be as quick as I can!
+		</div>
+	</div>
+	<div class="an-error-occurred section hide">
+		<div class="box padded">
+			<strong>Sorry about this...</strong><br>
+			An error we couldn't recover from occurred. You might want to try again later.
+		</div>
+	</div>
+</div>
+
+<form method="POST" id="postbackform" class="hide" target="_top">
+	<input type="hidden" name="data" value="" id="postbackdata">
+</form>
+{{end}}
+{{define "js"}}
+
+	<script>
+
+jQuery(function($) {
+	var GLOBALDATA = {};
+	var originaldata = {
+		siteid: "{{.SiteID}}",
+		postback: "{{.PostbackURL}}",
+		key: "{{.Key}}",
+		mcuser: "{{.MCUser}}"
+	};
+	var FIRST_SKIN_CHANGE_CHECK = 30000;
+	var BETWEEN_SKIN_CHANGE_CHECK = 5000;
+
+	var checkSkinReady = function() {
+		$.ajax({
+			type: 'POST',
+			url: '/api/user/authenticate',
+			data: {
+				uuid: GLOBALDATA.uuid,
+				password: GLOBALDATA.password,
+				data: originaldata
+			},
+			global: false,
+			dataType: 'json'
+		}).done(function(data) {
+			if (!data.correct) {
+				setTimeout(checkSkinReady, BETWEEN_SKIN_CHANGE_CHECK);
+				return;
+			}
+
+			performRedirect(data);
+		}).fail(function() {
+			setTimeout(checkSkinReady, BETWEEN_SKIN_CHANGE_CHECK);
+		});
+	};
+
+	var performRedirect = function(data) {
+		console.log(data);
+		if (data.postback && data.postbackdata) {
+			var f = $('#postbackform');
+			f.attr('action', data.postback);
+			$('#postbackdata').attr('value', data.postbackdata);
+			f.submit();
+		}
+	}
+
+	$(document).ajaxSend(function() {
+		$('.section').addClass('hide');
+		$('.please-wait').removeClass('hide');
+	}).ajaxComplete(function() {
+		$('.please-wait').addClass('hide');
+	}).ajaxError(function() {
+		$('.an-error-occurred').removeClass('hide');
+	});
+
+	$('.intro form').submit(function() {
+		$.ajax({
+			type: 'POST',
+			url: '/api/user/check',
+			data: {
+				mcusername: $('#mcusername').val()
+			},
+			dataType: 'json'
+		}).done(function(data) {
+			if (data.error) {
+				$('.intro').removeClass('hide');
+				$('.intro .no-such-user').removeClass('hide');
+				$('.intro input').focus();
+				return;
+			}
+
+			GLOBALDATA.uuid = data.uuid;
+			GLOBALDATA.username = data.username;
+			if (!data.exists) {
+				$('.pick-a-pass').removeClass('hide');
+				$('.pick-a-pass input').focus();
+			} else {
+				$('.enter-pass').removeClass('hide');
+				$('.enter-pass input').focus();
+			}
+		});
+		return false;
+	});
+
+	$('.pick-a-pass form').submit(function() {
+		if ($('#new-password').val() == '') {
+			// I don't really care if your password is secure
+			// I'm only going to check this client-side.
+			return false;
+		}
+
+		$.ajax({
+			type: 'POST',
+			url: '/api/user/create',
+			data: {
+				uuid: GLOBALDATA.uuid,
+				password: $('#new-password').val()
+			},
+			dataType: 'json'
+		}).done(function(data) {
+			var skinUri = 'http://' + window.location.host + '/media/skin/' + data.filename + '.png';
+			$('.change-skin a').attr('href', 'https://www.minecraft.net/profile/skin/remote?url=' + encodeURIComponent(skinUri));
+
+			$('.change-skin').removeClass('hide');
+
+			GLOBALDATA.password = $('#new-password').val();
+
+			setTimeout(checkSkinReady, FIRST_SKIN_CHANGE_CHECK);
+		});
+		return false;
+	});
+
+	$('.enter-pass form').submit(function() {
+		$.ajax({
+			type: 'POST',
+			url: '/api/user/authenticate',
+			data: {
+				uuid: GLOBALDATA.uuid,
+				password: $('#password').val(),
+				data: originaldata
+			},
+			dataType: 'json'
+		}).done(function(data) {
+			if (!data.correct) {
+				$('.enter-pass').removeClass('hide');
+				$('.enter-pass .password-incorrect').removeClass('hide');
+				return;
+			}
+
+			performRedirect(data);
+		});
+		return false;
+	});
+
+	$('.enter-pass .forgotten').click(function() {
+		$('.enter-pass').addClass('hide');
+		$('.pick-a-pass').removeClass('hide');
+	});
+});
+	</script>
+{{end}}
