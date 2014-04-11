@@ -25,6 +25,9 @@ var (
 	}
 )
 
+// This implementation could, for instance, be changed to actually mess around with PNGs
+// instead of storing the data as pixels in the image :P
+
 func GenerateDatablock(data string, key string) (image.Image, error) {
 	im := image.NewNRGBA(image.Rect(0, 0, DATABLOCK_WIDTH, DATABLOCK_HEIGHT))
 

@@ -42,6 +42,7 @@ type SigningData struct {
 	Username string `json:"username"`
 	UUID     string `json:"uuid"`
 	Now      int64  `json:"now"`
+	Key      string `json:"key"`
 }
 
 func generateSharedKey(siteid string) []byte {
@@ -184,8 +185,8 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 	je := json.NewEncoder(w)
 
 	mcusername := r.Form.Get("mcusername")
-	// don't do anything yet
 
+	// get their uuid from mojang
 	user, err := mojang.GetProfileByUsername(mcusername)
 	if err != nil {
 		if err == mojang.ERR_NO_SUCH_USER {
@@ -202,6 +203,7 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// so we can get their skin data
 	mcprofile, err := minecraft.GetProfile(user.Id)
 	if err != nil {
 		log.Println("error while getting minecraft profile", mcusername, user.Id, err)
@@ -209,6 +211,7 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// so we can get their skin
 	skinim, err := minecraft.GetSkin(mcprofile)
 	if err != nil {
 		log.Println("error while getting skin", mcusername, user.Id, mcprofile, err)
@@ -216,6 +219,7 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// so we can check if it has a datablock in it
 	je.Encode(struct {
 		MCUsername string `json:"mcusername"`
 		UUID       string `json:"uuid"`
@@ -283,6 +287,7 @@ func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
 			Now:      time.Now().UTC().Unix(),
 			UUID:     mcprofile.Id,
 			Username: mcprofile.Name,
+			Key:      r.Form.Get("data[key]"),
 		}, r.Form.Get("data[siteid]"))
 		postbackurl = postback.String()
 	}
