@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"crypto/sha512"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
@@ -50,17 +51,79 @@ func generateSharedKey(siteid string) []byte {
 	return key
 }
 func generateDataBlob(data SigningData, siteid string) string {
-	skey := generateSharedKey(siteid)
 	databytes, _ := json.Marshal(data)
+	datahash := generateHashOfBlob(databytes, siteid, true)
+	return base64.StdEncoding.EncodeToString(datahash)
+}
+func generateHashOfBlob(data []byte, siteid string, doappend bool) []byte {
+	skey := generateSharedKey(siteid)
 	x := hmac.New(sha1.New, skey)
-	x.Write(databytes)
-	datahash := x.Sum(databytes)
-	return base64.URLEncoding.EncodeToString(datahash)
+	x.Write(data)
+	if doappend {
+		return x.Sum(data)
+	}
+	return x.Sum([]byte{})
 }
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("<!DOCTYPE html><html><body><h1>Minecraft Account Association</h1><p>For access, please email lukegb: my email is (my username) AT (my username) DOT com.</p></body></html>"))
+}
+
+func TestPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.Header().Set("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("must be a POST request"))
+		return
+	}
+
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("data invalid"))
+		return
+	}
+
+	data := r.Form.Get("data")
+	databytes, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		w.Write([]byte("invalid base64 data"))
+		return
+	}
+
+	if len(databytes) < 20 {
+		w.Write([]byte("data too short?!?"))
+		return
+	}
+	sigbytes := databytes[len(databytes)-20:]
+	databytes = databytes[:len(databytes)-20]
+
+	mysigbytes := generateHashOfBlob(databytes, "_", false)
+	sigok := subtle.ConstantTimeCompare(sigbytes, mysigbytes) == 1
+	sigokchar := "no"
+	if sigok {
+		sigokchar = "yes"
+	}
+
+	w.Write([]byte("\ndata: "))
+	w.Write(databytes)
+	w.Write([]byte("\nsignature OK? " + sigokchar))
+	if sigok {
+		dataobj := new(SigningData)
+		err := json.Unmarshal(databytes, dataobj)
+		if err != nil {
+			w.Write([]byte("\nfailed to unmarshal JSON: " + err.Error()))
+		} else {
+			w.Write([]byte("\nunmarshalled OK"))
+			tsfresh := "no"
+			now := time.Now().UTC().Unix()
+			if dataobj.Now > (now-30) && dataobj.Now < (now+30) {
+				tsfresh = fmt.Sprintf("yes (%d seconds old)", now-dataobj.Now)
+			}
+			w.Write([]byte("\ntimestamp 'fresh'? " + tsfresh))
+		}
+	}
 }
 
 func PerformPage(w http.ResponseWriter, r *http.Request) {
@@ -217,7 +280,7 @@ func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		postbackdata = generateDataBlob(SigningData{
-			Now:      time.Now().Unix(),
+			Now:      time.Now().UTC().Unix(),
 			UUID:     mcprofile.Id,
 			Username: mcprofile.Name,
 		}, r.Form.Get("data[siteid]"))
@@ -339,6 +402,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomePage)
 	r.HandleFunc("/perform", PerformPage)
+	r.HandleFunc("/test", TestPage)
 	r.HandleFunc("/api/user/check", ApiCheckUserPage)
 	r.HandleFunc("/api/user/create", ApiCreateUserPage)
 	r.HandleFunc("/api/user/authenticate", ApiAuthenticateUserPage)
