@@ -130,11 +130,11 @@ jQuery(function($) {
 	};
 
 	var performRedirect = function(data) {
-		console.log(data);
 		if (data.postback && data.postbackdata) {
 			var f = $('#postbackform');
 			f.attr('action', data.postback);
 			$('#postbackdata').attr('value', data.postbackdata);
+			$('.please-wait').removeClass('hide');
 			f.submit();
 		}
 	}
