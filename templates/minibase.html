@@ -6,14 +6,16 @@
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/pure/0.4.2/pure-min.css">
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 	<style type="text/css">
+		html, body, .wrapper {
+			width: 600px;
+			height: 400px;
+		}
 		html, body {
 			padding: 0; margin: 0;
 		}
 		* { box-sizing: border-box; }
 		.wrapper {
 			border: 3px solid darkblue;
-			width: 600px;
-			height: 400px;
 		}
 		.header {
 			background-color: darkblue;
@@ -27,6 +29,22 @@
 			margin: 0;
 			color: white;
 		}
+		.inner {
+			width: 594px;
+			height: 324px;
+		}
+		.footer {
+			background-color: darkblue;
+			padding: 0 10px;
+			height: 30px;
+			line-height: 30px;
+			text-align: right;
+			color: white;
+			font-size: small;
+		}
+		.footer a {
+			color: skyblue;
+		}
 		.padded {
 			padding: 10px 10px;
 		}
@@ -38,8 +56,8 @@
 			display: none;
 		}
 		.please-wait-box {
-			height: 354px;
-			line-height: 354px;
+			height: 324px;
+			line-height: 324px;
 			text-align: center;
 			background-color: lightgrey;
 			color: darkgrey;
@@ -73,6 +91,9 @@
 		</div>
 		<div class="inner">
 			{{template "content" .Data}}
+		</div>
+		<div class="footer">
+			<span>MCAssoc: an open service. Want in? Talk to me on IRC (lukegb@Esper) or <a href="mailto:mcassoc@lukegb.com">by email</a>.</span>
 		</div>
 	</div>
 {{template "js" .Data}}
