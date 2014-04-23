@@ -10,61 +10,57 @@ import (
 )
 
 const (
-	MAX_PAGES_TO_CHECK = 100
-	MOJANG_SERVER      = "https://api.mojang.com"
-	PROFILE_URL_FMT    = "%s/profiles/page/%d"
-	LOG_TAG            = "[HttpProfileRepository]"
+	PROFILES_PER_REQUEST = 100
+	MOJANG_SERVER        = "https://api.mojang.com"
+	PROFILE_URL_FMT      = "%s/profiles/minecraft"
+	LOG_TAG              = "[HttpProfileRepository]"
 )
 
 type HttpProfileRepository struct {
 	c *http.Client
 }
 
-type httpProfileRepositoryResult struct {
-	Profiles []Profile
-	Size     uint16
-}
+func (hpr HttpProfileRepository) GetProfilesByUsername(usernames []string) (profiles []Profile, err error) {
+	log.Println(LOG_TAG, "fetching profiles by usernames:", usernames)
 
-func (hpr HttpProfileRepository) GetProfilesByCriteria(pc []ProfileCriteria) (profiles []Profile, err error) {
-	log.Println(LOG_TAG, "fetching profiles by criteria:", pc)
+	for startAt := 0; startAt < len(usernames); startAt += PROFILES_PER_REQUEST {
+		endAt := startAt+PROFILES_PER_REQUEST
+		if endAt > len(usernames) {
+			endAt = len(usernames)
+		}
 
-	var jsonCriteria []byte
-	if jsonCriteria, err = json.Marshal(pc); err != nil {
-		return nil, err
-	}
+		var jsonCriteria []byte
+		if jsonCriteria, err = json.Marshal(usernames[startAt : endAt]); err != nil {
+			return nil, err
+		}
 
-	for page := uint8(1); page < MAX_PAGES_TO_CHECK; page += 1 {
-		if res, err := hpr.getProfilesByCriteriaPage(jsonCriteria, page); err != nil {
+		if res, err := hpr.getProfilesByUsernamePage(jsonCriteria); err != nil {
 			return profiles, err
 		} else {
-			if res.Size == 0 {
-				break
-			}
-
-			profiles = append(profiles, res.Profiles...)
+			profiles = append(profiles, res...)
 		}
 	}
 
 	return
 }
 
-func (hpr HttpProfileRepository) getProfilesByCriteriaPage(jsonCriteria []byte, page uint8) (*httpProfileRepositoryResult, error) {
+func (hpr HttpProfileRepository) getProfilesByUsernamePage(jsonCriteria []byte) ([]Profile, error) {
 	var resp *http.Response
 	var err error
 
 	r := bytes.NewReader(jsonCriteria)
-	targetUrl := fmt.Sprintf(PROFILE_URL_FMT, MOJANG_SERVER, page)
+	targetUrl := fmt.Sprintf(PROFILE_URL_FMT, MOJANG_SERVER)
 	if resp, err = hpr.c.Post(targetUrl, "application/json", r); err != nil {
-		return nil, err
+		return []Profile{}, err
 	}
 	defer resp.Body.Close()
 
 	var retBytes []byte
 	retBytes, err = ioutil.ReadAll(resp.Body)
 
-	result := new(httpProfileRepositoryResult)
-	if err = json.Unmarshal(retBytes, result); err != nil {
-		return nil, err
+	result := make([]Profile, 0)
+	if err = json.Unmarshal(retBytes, &result); err != nil {
+		return []Profile{}, err
 	}
 
 	return result, nil

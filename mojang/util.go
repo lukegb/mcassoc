@@ -2,12 +2,7 @@ package mojang
 
 func GetProfileByUsername(username string) (Profile, error) {
 	hpr := NewHttpProfileRepository()
-	profiles, err := hpr.GetProfilesByCriteria([]ProfileCriteria{
-		ProfileCriteria{
-			Agent: "minecraft",
-			Name:  username,
-		},
-	})
+	profiles, err := hpr.GetProfilesByUsername([]string{username})
 	if err != nil {
 		return Profile{}, err
 	} else if len(profiles) == 0 {
