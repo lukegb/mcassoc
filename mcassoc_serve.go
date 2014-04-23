@@ -45,6 +45,21 @@ type SigningData struct {
 	Key      string `json:"key"`
 }
 
+type SkinColour string
+
+type SkinColourBit struct {
+	Background SkinColour
+	Text SkinColour
+}
+
+type SkinColour struct {
+	Border SkinColourBit
+	Box SkinColourBit
+	Main SkinColourBit
+
+	Button SkinColour
+}
+
 func generateSharedKey(siteid string) []byte {
 	z := hmac.New(sha512.New, sesskey)
 	z.Write([]byte(siteid))
@@ -64,6 +79,39 @@ func generateHashOfBlob(data []byte, siteid string, doappend bool) []byte {
 		return x.Sum(data)
 	}
 	return x.Sum([]byte{})
+}
+
+type Gettable interface {
+	Get(key string) string
+}
+
+func getOr(vs Gettable, what string, default string) string {
+	val := vs.Get(what)
+	if val == "" {
+		return default
+	}
+	return val
+}
+
+func unwrapSkinColour(vs Gettable) SkinColour {
+	return SkinColour{
+		Border: {
+			Background: getOr(vs, "c:bdr:b", "darkblue"),
+			Text: getOr(vs, "c:bdr:t", "white"),
+		},
+		Box: {
+			Background: getOr(vs, "c:box:b", "skyblue"),
+			Text: getOr(vs, "c:box:t", "black"),
+		},
+		Main: {
+			Background: getOr(vs, "c:mn:b", "white"),
+			Text: getOr(vs, "c:mn:t", "black"),
+		},
+		Button: {
+			Background: getOr(vs, "c:btn:b", "#0078e7"),
+			Text: getOr(vs, "c:btn:t", "white"),
+		},
+	}
 }
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
@@ -134,6 +182,8 @@ func PerformPage(w http.ResponseWriter, r *http.Request) {
 	key := v.Get("key")
 	mcuser := v.Get("mcusername")
 
+	skinColours := unwrapSkinColour(v)
+
 	if pbu, err := url.Parse(postbackURL); err != nil || (pbu.Scheme != "http" && pbu.Scheme != "https") {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("postback must be a HTTP/HTTPS url"))
@@ -158,11 +208,13 @@ func PerformPage(w http.ResponseWriter, r *http.Request) {
 			PostbackURL string
 			Key         string
 			MCUser      string
+			SkinColours SkinColour
 		}{
 			SiteID:      siteID,
 			PostbackURL: postbackURL,
 			Key:         key,
 			MCUser:      mcuser,
+			SkinColours: skinColours,
 		},
 	})
 }
