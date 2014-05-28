@@ -57,6 +57,8 @@ type SkinColour struct {
 	Main   SkinColourBit
 
 	Button SkinColourBit
+
+	Branding bool
 }
 
 func generateSharedKey(siteid string) []byte {
@@ -114,6 +116,7 @@ func unwrapSkinColour(vs Gettable) SkinColour {
 			Text:       getOr(vs, "c:btn:t", "white"),
 			Link:       "ignored",
 		},
+		Branding: getOr(vs, "showBranding", "true") != "false",
 	}
 }
 

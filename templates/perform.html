@@ -149,6 +149,8 @@ jQuery(function($) {
 	});
 
 	$('.intro form').submit(function() {
+		if ($('#mcusername').val().length == 0) return false;
+
 		$.ajax({
 			type: 'POST',
 			url: '/api/user/check',

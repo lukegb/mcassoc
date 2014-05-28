@@ -101,6 +101,18 @@
 			background-color: {{.Data.SkinColour.Button.Background}};
 			color: {{.Data.SkinColour.Button.Text}};
 		}
+{{if .Data.SkinColour.Branding}}
+		/* Yay, they're showing the branding */
+{{else}}
+		/* The site owner has elected not to show the branding. Now hide the footer. */
+		.footer {
+			display: none;
+		}
+		.please-wait-box {
+			height: 354px;
+			line-height: 354px;
+		}
+{{end}}
 	</style>
 </head>
 <body>
