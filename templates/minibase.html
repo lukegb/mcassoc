@@ -15,10 +15,11 @@
 		}
 		* { box-sizing: border-box; }
 		.wrapper {
-			border: 3px solid darkblue;
+			border: 3px solid {{.Data.SkinColour.Border.Background}};
 		}
 		.header {
-			background-color: darkblue;
+			background-color: {{.Data.SkinColour.Border.Background}};
+			color: {{.Data.SkinColour.Border.Text}};
 			padding: 0 10px;
 			height: 40px;
 			line-height: 40px;
@@ -27,29 +28,31 @@
 			font-size: large;
 			padding: 0;
 			margin: 0;
-			color: white;
 		}
 		.inner {
+			background-color: {{.Data.SkinColour.Main.Background}};
+			color: {{.Data.SkinColour.Main.Text}};
 			width: 594px;
 			height: 324px;
 		}
 		.footer {
-			background-color: darkblue;
+			background-color: {{.Data.SkinColour.Border.Background}};
+			color: {{.Data.SkinColour.Border.Text}};
 			padding: 0 10px;
 			height: 30px;
 			line-height: 30px;
 			text-align: right;
-			color: white;
 			font-size: small;
 		}
 		.footer a {
-			color: skyblue;
+			color: {{.Data.SkinColour.Border.Text}};
 		}
 		.padded {
 			padding: 10px 10px;
 		}
 		.box {
-			background-color: skyblue;
+			background-color: {{.Data.SkinColour.Box.Background}};
+			color: {{.Data.SkinColour.Box.Text}};
 			width: 594px;
 		}
 		.hide {
