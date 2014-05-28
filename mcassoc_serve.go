@@ -48,6 +48,7 @@ type SigningData struct {
 type SkinColourBit struct {
 	Background string
 	Text       string
+	Link       string
 }
 
 type SkinColour struct {
@@ -96,18 +97,22 @@ func unwrapSkinColour(vs Gettable) SkinColour {
 		Border: SkinColourBit{
 			Background: getOr(vs, "c:bdr:b", "darkblue"),
 			Text:       getOr(vs, "c:bdr:t", "white"),
+			Link:       getOr(vs, "c:bdr:l", "white"),
 		},
 		Box: SkinColourBit{
 			Background: getOr(vs, "c:box:b", "skyblue"),
 			Text:       getOr(vs, "c:box:t", "black"),
+			Link:       getOr(vs, "c:bdr:l", "black"),
 		},
 		Main: SkinColourBit{
 			Background: getOr(vs, "c:mn:b", "white"),
 			Text:       getOr(vs, "c:mn:t", "black"),
+			Link:       getOr(vs, "c:mn:l", "black"),
 		},
 		Button: SkinColourBit{
 			Background: getOr(vs, "c:btn:b", "#0078e7"),
 			Text:       getOr(vs, "c:btn:t", "white"),
+			Link:       "ignored",
 		},
 	}
 }

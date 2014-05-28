@@ -17,12 +17,18 @@
 		.wrapper {
 			border: 3px solid {{.Data.SkinColour.Border.Background}};
 		}
+		.wrapper a, .wrapper a:active, .wrapper a:visited, .wrapper a:hover, .wrapper a:link {
+			color: {{.Data.SkinColour.Border.Link}};
+		}
 		.header {
 			background-color: {{.Data.SkinColour.Border.Background}};
 			color: {{.Data.SkinColour.Border.Text}};
 			padding: 0 10px;
 			height: 40px;
 			line-height: 40px;
+		}
+		.header a, .header a:active, .header a:visited, .header a:hover, .header a:link {
+			color: {{.Data.SkinColour.Border.Link}};
 		}
 		.header h1 {
 			font-size: large;
@@ -35,6 +41,9 @@
 			width: 594px;
 			height: 324px;
 		}
+		.inner a, .inner a:active, .inner a:visited, .inner a:hover, .inner a:link {
+			color: {{.Data.SkinColour.Main.Link}};
+		}
 		.footer {
 			background-color: {{.Data.SkinColour.Border.Background}};
 			color: {{.Data.SkinColour.Border.Text}};
@@ -44,8 +53,8 @@
 			text-align: right;
 			font-size: small;
 		}
-		.footer a {
-			color: {{.Data.SkinColour.Border.Text}};
+		.footer a, .footer a:active, .footer a:visited, .footer a:hover, .footer a:link {
+			color: {{.Data.SkinColour.Border.Link}};
 		}
 		.padded {
 			padding: 10px 10px;
@@ -54,6 +63,9 @@
 			background-color: {{.Data.SkinColour.Box.Background}};
 			color: {{.Data.SkinColour.Box.Text}};
 			width: 594px;
+		}
+		.box a, .box a:active, .box a:visited, .box a:hover, .box a:link {
+			color: {{.Data.SkinColour.Box.Link}};
 		}
 		.hide {
 			display: none;
@@ -84,6 +96,10 @@
 			padding: 6px 6px;
 			background-color: rgba(255, 50, 50, 0.2);
 			border: 1px solid rgba(255, 50, 50, 1);
+		}
+		.pure-button-primary {
+			background-color: {{.Data.SkinColour.Button.Background}};
+			color: {{.Data.SkinColour.Button.Text}};
 		}
 	</style>
 </head>
