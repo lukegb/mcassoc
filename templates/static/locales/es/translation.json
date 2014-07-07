@@ -1,0 +1,51 @@
+{
+	"please_wait": "Un momento...",
+	"step1": {
+		"header": [
+			"¡Hola! El sitio en el que estás quiere confirmar tu cuenta de Minecraft.<br>",
+			"Para esto, te vamos a realizar unas preguntas."
+		],
+		"error": "<strong>¡oops!</strong> No se ha encontrado ninguna cuenta de Minecraft con el nombre introducido.",
+		"textbox": "¿Cuál es tu nombre de usuario de Minecraft?",
+		"button": "Siguiente"
+	},
+	"step2_register": {
+		"header": [
+			"Parece que no has realizado este proceso nunca.<br>",
+			"Por favor, selecciona una contraseña <strong>que no sea igual a la que utilizas para tu cuenta de Mojang o para este sitio</strong>.<br>",
+			"Podrás utilizar esta contraseña si necesitas iniciar el proceso de nuevo, o en otro sitio."
+		],
+		"error": "Erm, what?",
+		"textbox": "Elije una contraseña para la vinculación de cuentas:",
+		"button": "Siguiente"
+	},
+	"step2_login": {
+		"header": [
+			"<strong>¡Bienvenido de nuevo!</strong> Parece que has realizado ya este proceso anteriormente, o en otro sitio.<br>",
+			"Para continuar, simplemente introduce la contraseña de vinculación."
+		],
+		"error": "*¡oops!* Los datos introducidos no parecen correctos. Si no recuerdas los datos, o no has realizado este proceso nunca pincha en <a href=\"javascript:;\" class=\"forgotten\">Recordar datos</a>.",
+		"textbox": "Introduce tu contraseña de vinculación:",
+		"button": "Siguiente",
+		"forgotten_link": "Recordar datos/No he realizado esto nunca"
+	},
+	"step3": {
+		"header": [
+			"<strong>¡Último paso!</strong> Ya casi lo has hecho.<br>",
+			"Para verificar tu cuenta de Minecraft, necesitamos que cambies tu skin.<br>",
+			"Solo haz click en el botón abajo y serás enviado a Minecraft.net - Inicia sesión, y acepta el cambio de skin.<br>",
+			"<br>",
+			"Si mantienes la misma skin, entonces la próxima vez podrás intentar asociar tu cuenta con una web, solo te pediremos la contraseña que acabas de elegir, y ¡listo!"
+		],
+		"button": "Cambiar mi skin de Minecraft",
+		"text": "Cuando hayas terminado, cierra la ventana y completaremos el proceso. Este proceso puede durar unos segundos hasta que aceptes el cambio de skin, ¡pero intentaremos ser lo más rápidos que podamos!"
+	},
+	"fatal_error": {
+		"header": "Lo sentimos...",
+		"text": "Ha ocurrido un error. Puedes intentarlo más tarde."
+	},
+	"branding": {
+		"header": "Vinculación de cuenta de Minecraft",
+		"footer": "MCAssoc: un servicio abierto. ¿Lo quieres? Háblame en IRC (lukegb@Esper) o <a href=\"mcassoc.es@lukegb.com\">por email</a>."
+	}
+}

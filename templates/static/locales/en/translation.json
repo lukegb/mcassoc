@@ -1,0 +1,51 @@
+{
+	"please_wait": "Just a moment...",
+	"step1": {
+		"header": [
+			"Hello! The site you're on wishes to confirm your Minecraft account.<br>",
+			"In order to do this, I need to ask you a few questions."
+		],
+		"error": "<strong>Whoops!</strong> I couldn't find a Minecraft user with that username. Sorry about that.",
+		"textbox": "What's your Minecraft username?",
+		"button": "Next"
+	},
+	"step2_register": {
+		"header": [
+			"I see you haven't done this before.<br>",
+			"Please pick a password <strong>that is not the same as the one used for your Mojang account or the site from which you came</strong>.<br>",
+			"You'll be able to use this if you need to complete this process again."
+		],
+		"error": "Erm, what?",
+		"textbox": "Pick a Minecraft Associator password:",
+		"button": "Next"
+	},
+	"step2_login": {
+		"header": [
+			"<strong>Welcome back!</strong> I see you've done this before, either here or on a different site.<br>",
+			"To continue, simply enter your Minecraft Associator password."
+		],
+		"error": "<strong>Whoops!</strong> I don't think that was correct. If you can't remember what it was, or you haven't associated your account before, please <a href=\"javascript:;\" class=\"forgotten\">reset your password</a>.",
+		"textbox": "Enter your Minecraft Associator password:",
+		"button": "Next",
+		"forgotten_link": "I've forgotten in/I haven't done this before"
+	},
+	"step3": {
+		"header": [
+			"<strong>Last step!</strong> You're almost done.<br>",
+			"To verify your Minecraft account, I need you to change your skin.<br>",
+			"Just click the button below and you'll be taken to Minecraft.net - just log in, and accept the skin change.<br>",
+			"<br>",
+			"If you keep your skin the same, then the next time you try to associate your account with a website, I'll just ask you for the password you just set, and away we go!"
+		],
+		"button": "Change my Minecraft skin",
+		"text": "Once you're done, just close the window and I'll complete the process. It may take a few seconds once you've accepted the skin change, but I'll try to be as quick as I can!"
+	},
+	"fatal_error": {
+		"header": "Sorry about this...",
+		"text": "An error we couldn't recover from occurred. You might want to try again later."
+	},
+	"branding": {
+		"header": "Minecraft Account Association",
+		"footer": "MCAssoc: an open service. Want in? Talk to me on IRC (lukegb@Esper) or <a href=\"mailto:mcassoc@lukegb.com\">by email</a>."
+	}
+}

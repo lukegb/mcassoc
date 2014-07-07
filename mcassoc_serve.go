@@ -470,6 +470,7 @@ func main() {
 	r.HandleFunc("/api/user/create", ApiCreateUserPage)
 	r.HandleFunc("/api/user/authenticate", ApiAuthenticateUserPage)
 	r.HandleFunc("/media/skin/{filename:[0-9a-z]+}.png", SkinServerPage)
+	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("./templates/")))
 	http.Handle("/", r)
 
 	log.Println("Running!")
