@@ -1,4 +1,7 @@
 {
+	"localiser": {
+		"credit": "Luke Granger-Brown"
+	},
 	"please_wait": "Just a moment...",
 	"step1": {
 		"header": [
