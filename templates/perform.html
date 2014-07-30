@@ -203,7 +203,7 @@ var gogoGadget = function() {
 				dataType: 'json'
 			}).done(function(data) {
 				var skinUri = 'http://' + window.location.host + '/media/skin/' + data.filename + '.png';
-				$('.change-skin a').attr('href', 'https://www.minecraft.net/profile/skin/remote?url=' + encodeURIComponent(skinUri));
+				$('.change-skin a').attr('href', 'https://minecraft.net/profile/skin/remote?url=' + encodeURIComponent(skinUri));
 	
 				$('.change-skin').removeClass('hide');
 	

@@ -58,6 +58,8 @@ func (hpr HttpProfileRepository) getProfilesByUsernamePage(jsonCriteria []byte) 
 	var retBytes []byte
 	retBytes, err = ioutil.ReadAll(resp.Body)
 
+	log.Println("Got", string(retBytes))
+
 	result := make([]Profile, 0)
 	if err = json.Unmarshal(retBytes, &result); err != nil {
 		return []Profile{}, err

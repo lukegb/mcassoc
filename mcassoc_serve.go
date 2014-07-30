@@ -28,6 +28,7 @@ import (
 var sesskey []byte
 var authenticator mcassoc.Associfier
 var httplistenloc string
+var profileClient *minecraft.ProfileClient
 
 type TemplatePageData struct {
 	Title string
@@ -262,7 +263,7 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// so we can get their skin data
-	mcprofile, err := minecraft.GetProfile(user.Id)
+	mcprofile, err := profileClient.GetProfile(user.Id)
 	if err != nil {
 		log.Println("error while getting minecraft profile", mcusername, user.Id, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -309,7 +310,7 @@ func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
 	uuid := r.Form.Get("uuid")
 	password := r.Form.Get("password")
 
-	mcprofile, err := minecraft.GetProfile(uuid)
+	mcprofile, err := profileClient.GetProfile(uuid)
 	if err != nil {
 		log.Println("error while getting minecraft profile", uuid, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -385,7 +386,7 @@ func ApiCreateUserPage(w http.ResponseWriter, r *http.Request) {
 	uuid := r.Form.Get("uuid")
 	password := r.Form.Get("password")
 
-	mcprofile, err := minecraft.GetProfile(uuid)
+	mcprofile, err := profileClient.GetProfile(uuid)
 	if err != nil {
 		log.Println("error while getting minecraft profile", uuid, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -453,6 +454,7 @@ func myinit() {
 	// load the authentication keys
 	sesskey = []byte(flagSesskey)
 	authenticator = mcassoc.NewAssocifier(flagAuthenticationKey)
+	profileClient = minecraft.NewProfileClient()
 
 	log.Println("Set session key", flagSesskey)
 	log.Println("Set authentication key", flagAuthenticationKey)

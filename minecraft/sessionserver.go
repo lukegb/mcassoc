@@ -2,7 +2,10 @@ package minecraft
 
 import (
 	"encoding/json"
+	"time"
+	"errors"
 	"fmt"
+	"log"
 	"io/ioutil"
 	"net/http"
 )
@@ -12,12 +15,22 @@ const (
 	PROFILE_URL_FMT = "%s/session/minecraft/profile/%s"
 )
 
-type ProfileClient struct {
-	c *http.Client
+type ProfileCacheEntry struct {
+	profile Profile
+	expiry time.Time
 }
 
-func (pc ProfileClient) GetProfile(uuid string) (Profile, error) {
+type ProfileCache map[string]ProfileCacheEntry
+
+type ProfileClient struct {
+	c *http.Client
+	x ProfileCache
+}
+
+func (pc *ProfileClient) GetProfile(uuid string) (Profile, error) {
 	var err error
+
+	log.Println("Requesting profile for", uuid)
 
 	var resp *http.Response
 	if resp, err = pc.c.Get(fmt.Sprintf(PROFILE_URL_FMT, SESSION_SERVER, uuid)); err != nil {
@@ -25,20 +38,42 @@ func (pc ProfileClient) GetProfile(uuid string) (Profile, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == 204 || resp.StatusCode == 429 {
+		if cacheEntry, ok := pc.x[uuid]; ok {
+			return cacheEntry.profile, nil
+		} else {
+			return Profile{}, errors.New("mojang returned 204 when I have nothing cached!")
+		}
+	}
+
 	var respBytes []byte
 	respBytes, err = ioutil.ReadAll(resp.Body)
+
+	log.Println("Got", string(respBytes), "with response code", resp.Status, "and headers", resp.Header)
 
 	var profile Profile
 	if err = json.Unmarshal(respBytes, &profile); err != nil {
 		return Profile{}, err
 	}
 
+	// cache it
+	cacheEntry := ProfileCacheEntry {
+		profile: profile,
+		expiry: time.Now().Add(1 * time.Hour),
+	}
+	pc.x[uuid] = cacheEntry
+
 	return profile, nil
 }
 
-func NewProfileClient() ProfileClient {
-	return ProfileClient{
-		c: http.DefaultClient,
+func NewProfileClient() *ProfileClient {
+	return &ProfileClient{
+		c: &http.Client{
+			Transport: &http.Transport{
+				DisableKeepAlives: false,
+			},
+		},
+		x: make(ProfileCache),
 	}
 }
 
