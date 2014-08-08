@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"encoding/hex"
 	"github.com/gorilla/mux"
 	mcassoc "github.com/lukegb/mcassoc/mcassoc"
 	minecraft "github.com/lukegb/mcassoc/minecraft"
@@ -26,6 +27,7 @@ import (
 )
 
 var sesskey []byte
+var dvKey []byte
 var authenticator mcassoc.Associfier
 var httplistenloc string
 var profileClient *minecraft.ProfileClient
@@ -68,6 +70,14 @@ func generateSharedKey(siteid string) []byte {
 	key := z.Sum([]byte{})
 	return key
 }
+
+func generateDomainVerificationKey(domain string) []byte {
+	z := hmac.New(sha512.New, dvKey)
+	z.Write([]byte(domain))
+	key := z.Sum([]byte{})
+	return key
+}
+
 func generateDataBlob(data SigningData, siteid string) string {
 	databytes, _ := json.Marshal(data)
 	datahash := generateHashOfBlob(databytes, siteid, true)
@@ -128,6 +138,40 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 		PageData: TemplatePageData{
 		Title: "Minecraft Account Association",
 	},
+	})
+}
+
+func SignUp(w http.ResponseWriter, r *http.Request) {
+	//TODO: DRY
+	if r.Method != "POST" {
+		w.Header().Set("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("must be a POST request"))
+		return
+	}
+
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("data invalid"))
+		return
+	}
+	domain := r.Form.Get("domain")
+	data := generateDomainVerificationKey(domain)
+
+	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/verification.html"))
+	value := hex.EncodeToString(data)
+	t.ExecuteTemplate(w, "layout", TemplateData{
+		PageData: TemplatePageData{
+		Title: "Minecraft Account Association",
+	},
+		Data: struct {
+				Key string
+				URL string
+			}{
+				Key: value,
+				URL: "http://" + domain + "/mcassoc-" + value + ".txt",
+		},
 	})
 }
 
@@ -460,6 +504,7 @@ func myinit() {
 
 	// load the authentication keys
 	sesskey = []byte(flagSesskey)
+	dvKey = []byte(flagDomainVerificationKey)
 	authenticator = mcassoc.NewAssocifier(flagAuthenticationKey)
 	profileClient = minecraft.NewProfileClient()
 
@@ -474,6 +519,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomePage)
+	r.HandleFunc("/signup", SignUp)
 	r.HandleFunc("/perform", PerformPage)
 	r.HandleFunc("/test", TestPage)
 	r.HandleFunc("/api/user/check", ApiCheckUserPage)
@@ -481,6 +527,8 @@ func main() {
 	r.HandleFunc("/api/user/authenticate", ApiAuthenticateUserPage)
 	r.HandleFunc("/media/skin/{filename:[0-9a-z]+}.png", SkinServerPage)
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("./templates/")))
+	r.PathPrefix("/css/").Handler(http.FileServer(http.Dir("./templates/")))
+	r.PathPrefix("/img/").Handler(http.FileServer(http.Dir("./templates/")))
 	http.Handle("/", r)
 
 	log.Println("Running!")
