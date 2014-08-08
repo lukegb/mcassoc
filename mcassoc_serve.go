@@ -122,8 +122,13 @@ func unwrapSkinColour(vs Gettable) SkinColour {
 }
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("<!DOCTYPE html><html><body><h1>Minecraft Account Association</h1><p>For access, please email lukegb: my email is (my username) AT (my username) DOT com.</p></body></html>"))
+	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/signup.html"))
+
+	t.ExecuteTemplate(w, "layout", TemplateData{
+		PageData: TemplatePageData{
+		Title: "Minecraft Account Association",
+	},
+	})
 }
 
 func TestPage(w http.ResponseWriter, r *http.Request) {
@@ -446,8 +451,10 @@ func SkinServerPage(w http.ResponseWriter, r *http.Request) {
 func myinit() {
 	var flagSesskey string
 	var flagAuthenticationKey string
+	var flagDomainVerificationKey string
 	flag.StringVar(&flagSesskey, "sesskey", "insecure", "session key (used for creating shared secrets with clients)")
 	flag.StringVar(&flagAuthenticationKey, "authkey", "insecure", "authentication key (used for hashing passwords)")
+	flag.StringVar(&flagDomainVerificationKey, "dvkey", "insecure", "domain verification key (used for verifying domain ownership)")
 	flag.StringVar(&httplistenloc, "listen", ":21333", "HTTP listener location")
 	flag.Parse()
 
@@ -458,6 +465,7 @@ func myinit() {
 
 	log.Println("Set session key", flagSesskey)
 	log.Println("Set authentication key", flagAuthenticationKey)
+	log.Println("Set domain verification key", flagDomainVerificationKey)
 	log.Println("Going to listen at", httplistenloc)
 }
 
