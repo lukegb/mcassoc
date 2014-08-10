@@ -1,6 +1,6 @@
 {{define "content"}}
 <main class="grid-container">
-    <section class="grid-50">
+    <section class="grid-60">
         <h2>What is it?</h2>
         <p>mcassoc is a free service that allows you to add Minecraft account association to your site or forums. By
            using skins to verify association, users don't need to provide account details to 3rd-party sites and once
@@ -8,7 +8,7 @@
            on a future site.</p>
     </section>
 
-    <section class="grid-50">
+    <section class="grid-40">
         <h2>Client libraries</h2>
         <p>Sample code for interfacing with the mcassoc service is available in the following languages:</p>
         <ul>
@@ -17,7 +17,7 @@
         </ul>
     </section>
     <div class="clear"></div>
-    <section class="grid-50">
+    <section class="grid-60">
         <h2>Features</h2>
         <ul>
             <li>Skin-based account verification</li>
@@ -25,18 +25,7 @@
             <li>Customizable text and background colours</li>
             <li>Easy to use with provided libraries</li>
         </ul>
-    </section>
-    <section class="grid-50">
-        <h2>Sign up</h2>
-        <p>To get your shared key, fill in the form below. You'll need to prove you own the domain in question.</p>
-        <form action="/signup" method="POST">
-            <input type="text" placeholder="Domain name" id="domain" name="domain"><button type="submit" id="signupSubmit">Sign up</button>
-        </form>
-
-    </section>
-    <div class="clear"></div>
-    <section class="grid-100" id="screenshots">
-        <h2>Screenshots</h2>
+        <h2 id="screenshots">Screenshots</h2>
         <ul class="slider">
             <li><img src="/img/mca1.png">
                 <div class="slider-content">
@@ -49,6 +38,26 @@
                 </div>
             </li>
         </ul>
+    </section>
+    <section class="grid-40">
+        <h2>Sign up</h2>
+        {{if .HasError}}
+            <p><strong>Error:</strong> Please provide a valid domain.</p>
+            <hr>
+            <p>To get your shared key, fill in the form below. You'll need to prove you own the domain in question.</p>
+
+            <form action="/signup" method="POST">
+                <input type="text" class="error" placeholder="Domain name" id="domain" name="domain"><button type="submit" id="signupSubmit">Sign up</button>
+            </form>
+        {{else}}
+            <p>To get your shared key, fill in the form below. You'll need to prove you own the domain in question.</p>
+
+            <form action="/signup" method="POST">
+                <input type="text" placeholder="Domain name" id="domain" name="domain"><button type="submit" id="signupSubmit">Sign up</button>
+            </form>
+        {{end}}
+
+
     </section>
 </main>
 {{end}}

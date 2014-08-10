@@ -2,12 +2,35 @@
 <main class="grid-container">
     <section class="grid-1000">
         <h2>Verify domain ownership</h2>
-        <p>Please create a file at {{.URL}} that we can use to verify you own this domain. The contents of the file should be:</p>
-        <p>{{.Key}}</p>
-        <p>Please don't include any other characters in the file.</p>
+        <p>In order to verify domain ownership, please create a file at the following URL:</p>
+        <input type="text" value="{{.URL}}" readonly>
+        <p>The file should contain the following contents. Please don't include any other characters in the file.</p>
+        <input type="text" value="{{.Key}}" readonly>
+    </section>
+    <section class="grid-1000">
+        <h2>Verification result</h2>
+        <p><button id="verify" data-domain="{{.UserDomain}}">Verify</button></p>
+        <hr>
+        <div class="result"></div>
+        <p id="congrats">Congrats, you've successfully verified your domain. You can now use the shared key above in your applications. <strong>Important!</strong> Please delete the verification file as soon as possible.</p>
     </section>
 </main>
 {{end}}
 
 {{define "scripts"}}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript">
+    $("#congrats").hide();
+    function checkVerificationStatus() {
+        $.post( "/api/domain/verify", {domain: $("#verify").data("domain")}).done(function(data) {
+            $(".result").html("Your shared key is " + data);
+            $("#congrats").slideDown();
+        }).fail(function(xhr, textStatus, errorThrown) {
+            $(".result").html("Check failed: " + xhr.responseText);
+        });
+    }
+    $("#verify").click(function () {
+        checkVerificationStatus();
+    });
+</script>
 {{end}}
