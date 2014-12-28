@@ -13,6 +13,7 @@ import (
 	mcassoc "github.com/lukegb/mcassoc/mcassoc"
 	minecraft "github.com/lukegb/mcassoc/minecraft"
 	mojang "github.com/lukegb/mcassoc/mojang"
+	statkeeper "github.com/lukegb/mcassoc/statkeeper"
 	"html/template"
 	"image/png"
 	"io"
@@ -206,6 +207,8 @@ func PerformPage(w http.ResponseWriter, r *http.Request) {
 
 	t := template.Must(template.ParseFiles("templates/minibase.html", "templates/perform.html"))
 
+	statkeeper.GLOBAL.NewAssocAttempt()
+
 	t.ExecuteTemplate(w, "layout", TemplateData{
 		PageData: TemplatePageData{
 			Title: "Minecraft Account Association",
@@ -256,18 +259,26 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		} else {
+			statkeeper.GLOBAL.MojangRequestFail()
+			statkeeper.GLOBAL.AssocFail()
 			log.Println("error while getting mojang profile", mcusername, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+	} else {
+		statkeeper.GLOBAL.MojangRequestOK()
 	}
 
 	// so we can get their skin data
 	mcprofile, err := profileClient.GetProfile(user.Id)
 	if err != nil {
+		statkeeper.GLOBAL.McRequestOK()
 		log.Println("error while getting minecraft profile", mcusername, user.Id, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	} else {
+		statkeeper.GLOBAL.McRequestFail()
+		statkeeper.GLOBAL.AssocFail()
 	}
 
 	// so we can get their skin
@@ -312,9 +323,13 @@ func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
 
 	mcprofile, err := profileClient.GetProfile(uuid)
 	if err != nil {
+		statkeeper.GLOBAL.McRequestFail()
+		statkeeper.GLOBAL.AssocFail()
 		log.Println("error while getting minecraft profile", uuid, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	} else {
+		statkeeper.GLOBAL.McRequestOK()
 	}
 
 	skinim, err := minecraft.GetSkin(mcprofile)
@@ -349,6 +364,8 @@ func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
 			Key:      r.Form.Get("data[key]"),
 		}, r.Form.Get("data[siteid]"))
 		postbackurl = postback.String()
+
+		statkeeper.GLOBAL.AssocComplete()
 	}
 
 	je.Encode(struct {
@@ -388,9 +405,13 @@ func ApiCreateUserPage(w http.ResponseWriter, r *http.Request) {
 
 	mcprofile, err := profileClient.GetProfile(uuid)
 	if err != nil {
+		statkeeper.GLOBAL.McRequestFail()
+		statkeeper.GLOBAL.AssocFail()
 		log.Println("error while getting minecraft profile", uuid, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	} else {
+		statkeeper.GLOBAL.McRequestOK()
 	}
 
 	skinim, err := minecraft.GetSkin(mcprofile)
@@ -446,8 +467,10 @@ func SkinServerPage(w http.ResponseWriter, r *http.Request) {
 func myinit() {
 	var flagSesskey string
 	var flagAuthenticationKey string
+	var flagStatHatKey string
 	flag.StringVar(&flagSesskey, "sesskey", "insecure", "session key (used for creating shared secrets with clients)")
 	flag.StringVar(&flagAuthenticationKey, "authkey", "insecure", "authentication key (used for hashing passwords)")
+	flag.StringVar(&flagStatHatKey, "stathat_key", "", "stathat key (used for statistics)")
 	flag.StringVar(&httplistenloc, "listen", ":21333", "HTTP listener location")
 	flag.Parse()
 
@@ -455,6 +478,12 @@ func myinit() {
 	sesskey = []byte(flagSesskey)
 	authenticator = mcassoc.NewAssocifier(flagAuthenticationKey)
 	profileClient = minecraft.NewProfileClient()
+
+	if flagStatHatKey != "" {
+		log.Println("Initialising statistics with key", flagStatHatKey)
+		sh := statkeeper.NewStatHatStatKeeper(flagStatHatKey)
+		statkeeper.GLOBAL = sh
+	}
 
 	log.Println("Set session key", flagSesskey)
 	log.Println("Set authentication key", flagAuthenticationKey)
