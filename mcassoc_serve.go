@@ -74,10 +74,10 @@ func generateSharedKey(siteid string) []byte {
 	return key
 }
 
-func generateDomainVerificationKey(domain string) []byte {
+func generateDomainVerificationKey(domain string, ip string) []byte {
 	z := hmac.New(sha512.New, dvKey)
 	t := time.Now()
-	z.Write([]byte(domain + t.Format("20060102")))
+	z.Write([]byte(domain + t.Format("20060102") + ip))
 	key := z.Sum([]byte{})
 	return key
 }
@@ -185,7 +185,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	data := generateDomainVerificationKey(domain)
+	data := generateDomainVerificationKey(domain, r.RemoteAddr);
 
 	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/verification.html"))
 	value := base64.URLEncoding.EncodeToString(data)
@@ -221,7 +221,7 @@ func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
 	}
 
 	domain := r.Form.Get("domain")
-	key := base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain))
+	key := base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain, r.RemoteAddr))
 	url := getDomainVerificationUrl(domain, key)
 	var resp *http.Response
 	resp, err = http.Get(url)
