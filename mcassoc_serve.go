@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"encoding/hex"
 	"github.com/gorilla/mux"
 	mcassoc "github.com/lukegb/mcassoc/mcassoc"
 	minecraft "github.com/lukegb/mcassoc/minecraft"
@@ -21,12 +22,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"net"
 	"os"
 	"path"
 	"time"
+	"strings"
 )
 
 var sesskey []byte
+var dvKey []byte
 var authenticator mcassoc.Associfier
 var httplistenloc string
 var profileClient *minecraft.ProfileClient
@@ -69,6 +73,15 @@ func generateSharedKey(siteid string) []byte {
 	key := z.Sum([]byte{})
 	return key
 }
+
+func generateDomainVerificationKey(domain string) []byte {
+	z := hmac.New(sha512.New, dvKey)
+	t := time.Now()
+	z.Write([]byte(domain + t.Format("20060102")))
+	key := z.Sum([]byte{})
+	return key
+}
+
 func generateDataBlob(data SigningData, siteid string) string {
 	databytes, _ := json.Marshal(data)
 	datahash := generateHashOfBlob(databytes, siteid, true)
@@ -94,6 +107,18 @@ func getOr(vs Gettable, what string, def string) string {
 		return def
 	}
 	return val
+}
+
+func isDomainValid(domain string) bool {
+	_, err := net.LookupIP(domain)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func getDomainVerificationUrl(domain string, code string) string {
+	return "http://" + domain + "/mcassoc-" + code + ".txt"
 }
 
 func unwrapSkinColour(vs Gettable) SkinColour {
@@ -123,8 +148,106 @@ func unwrapSkinColour(vs Gettable) SkinColour {
 }
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("<!DOCTYPE html><html><body><h1>Minecraft Account Association</h1><p>For access, please email lukegb: my email is (my username) AT (my username) DOT com.</p></body></html>"))
+	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/signup.html"))
+
+
+	t.ExecuteTemplate(w, "layout", TemplateData{
+		PageData: TemplatePageData{
+		Title: "Minecraft Account Association",
+	},
+		Data: struct {
+				HasError bool
+			}{
+				HasError: r.FormValue("err") == "domain",
+	},
+	})
+}
+
+func SignUp(w http.ResponseWriter, r *http.Request) {
+	//TODO: DRY
+	if r.Method != "POST" {
+		w.Header().Set("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("must be a POST request"))
+		return
+	}
+
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("data invalid"))
+		return
+	}
+	domain := r.Form.Get("domain")
+	if !isDomainValid(domain) {
+		http.Redirect(w, r, "/?err=domain", 301)
+		return
+	}
+
+
+	data := generateDomainVerificationKey(domain)
+
+	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/verification.html"))
+	value := base64.URLEncoding.EncodeToString(data)
+	t.ExecuteTemplate(w, "layout", TemplateData{
+		PageData: TemplatePageData{
+		Title: "Minecraft Account Association",
+	},
+		Data: struct {
+				Key string
+				URL string
+				UserDomain string
+			}{
+				Key: value,
+				URL: "http://" + domain + "/mcassoc-" + value + ".txt",
+				UserDomain: domain,
+		},
+	})
+}
+
+func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.Header().Set("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("must be a POST request"))
+		return
+	}
+
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("data invalid"))
+		return
+	}
+
+	domain := r.Form.Get("domain")
+	key := base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain))
+	url := getDomainVerificationUrl(domain, key)
+	var resp *http.Response
+	resp, err = http.Get(url)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("An error was encountered in opening a connection."))
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("URL must return HTTP 200 in response to GET. URL visited was " + url))
+		return
+	}
+
+	contents, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil || strings.TrimSpace(string(contents)) != key {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("Please ensure the file contains the key and no extra characters."))
+		return
+	}
+
+	w.Write([]byte(hex.EncodeToString(generateSharedKey(domain))))
 }
 
 func TestPage(w http.ResponseWriter, r *http.Request) {
@@ -468,14 +591,17 @@ func myinit() {
 	var flagSesskey string
 	var flagAuthenticationKey string
 	var flagStatHatKey string
+	var flagDomainVerificationKey string
 	flag.StringVar(&flagSesskey, "sesskey", "insecure", "session key (used for creating shared secrets with clients)")
 	flag.StringVar(&flagAuthenticationKey, "authkey", "insecure", "authentication key (used for hashing passwords)")
 	flag.StringVar(&flagStatHatKey, "stathat_key", "", "stathat key (used for statistics)")
+	flag.StringVar(&flagDomainVerificationKey, "dvkey", "insecure", "domain verification key (used for verifying domain ownership)")
 	flag.StringVar(&httplistenloc, "listen", ":21333", "HTTP listener location")
 	flag.Parse()
 
 	// load the authentication keys
 	sesskey = []byte(flagSesskey)
+	dvKey = []byte(flagDomainVerificationKey)
 	authenticator = mcassoc.NewAssocifier(flagAuthenticationKey)
 	profileClient = minecraft.NewProfileClient()
 
@@ -487,6 +613,7 @@ func myinit() {
 
 	log.Println("Set session key", flagSesskey)
 	log.Println("Set authentication key", flagAuthenticationKey)
+	log.Println("Set domain verification key", flagDomainVerificationKey)
 	log.Println("Going to listen at", httplistenloc)
 }
 
@@ -495,13 +622,17 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomePage)
+	r.HandleFunc("/signup", SignUp)
 	r.HandleFunc("/perform", PerformPage)
 	r.HandleFunc("/test", TestPage)
+	r.HandleFunc("/api/domain/verify", ApiDomainVerification)
 	r.HandleFunc("/api/user/check", ApiCheckUserPage)
 	r.HandleFunc("/api/user/create", ApiCreateUserPage)
 	r.HandleFunc("/api/user/authenticate", ApiAuthenticateUserPage)
 	r.HandleFunc("/media/skin/{filename:[0-9a-z]+}.png", SkinServerPage)
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("./templates/")))
+	r.PathPrefix("/css/").Handler(http.FileServer(http.Dir("./templates/")))
+	r.PathPrefix("/img/").Handler(http.FileServer(http.Dir("./templates/")))
 	http.Handle("/", r)
 
 	log.Println("Running!")
