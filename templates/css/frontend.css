@@ -221,3 +221,16 @@ hr {
     background-color: #aaa;
     height: 1px;
 }
+.alert {
+    background-color: #F2DEDE;
+    color: #963B3B;
+    border: 1px solid #B84C4C;
+    padding: 1em;
+    border-radius: 3px;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+.alert strong {
+    margin-bottom: 0.5em;
+    display: block;
+}
