@@ -272,7 +272,7 @@ func generateSessionId(w http.ResponseWriter) string {
 		log.Println("Random generation failed.")
 	}
 	stringId := base64.URLEncoding.EncodeToString(bytes)
-	cookie := &http.Cookie{Name: "SessionId", Value: stringId}
+	cookie := &http.Cookie{Name: "SessionId", Value: stringId, HttpOnly: true}
 	http.SetCookie(w, cookie)
 	return stringId
 }
