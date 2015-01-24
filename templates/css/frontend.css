@@ -195,6 +195,11 @@ input[type="text"]:focus {
     outline: 0px none;
 }
 
+input[readonly] {
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+}
+
 button {
     cursor: pointer;
     background-color: #2c3e50;
@@ -233,4 +238,26 @@ hr {
 .alert strong {
     margin-bottom: 0.5em;
     display: block;
+}
+.result {
+  padding: 1.5em;
+  border-radius: 3px;
+  background-color: #eee;
+  border: 1px solid #ddd;
+  margin-top: 1em;
+}
+
+.result .header {
+    font-weight: bold;
+    font-size: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.result .details {
+    font-family: monospace;
+    font-size: 0.95em;
+}
+
+section.verification-result {
+    margin-bottom: 1em;
 }

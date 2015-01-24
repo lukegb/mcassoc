@@ -1,18 +1,28 @@
 {{define "content"}}
 <main class="grid-container">
     <section class="grid-1000">
-        <h2>Verify domain ownership</h2>
-        <p>In order to verify domain ownership, please create a file at the following URL:</p>
+        <h2>Verify domain ownership with HTTP request</h2>
+        <p>This is the simplest verification method. In order to verify domain ownership, please create a file at the following URL:</p>
         <input type="text" value="{{.URL}}" readonly>
         <p>The file should contain the following contents. Please don't include any other characters in the file.</p>
         <input type="text" value="{{.Key}}" readonly>
+        <p>Please make sure that if you're using CloudFlare or another CDN service that the HTTP request isn't blocked. Ensure that "I'm under attack" mode is disabled.</p>
+        <p><button class="verify" data-domain="{{.UserDomain}}" data-type="http">Verify with HTTP request</button></p>
     </section>
     <section class="grid-1000">
+        <h2>Verify domain ownership with TXT record</h2>
+        <p>If you prefer, you can verify domain ownership by creating a TXT record. The TXT record should be created on the following domain:</p>
+        <input type="text" value="mcassocverify.{{.UserDomain}}" readonly>
+        <p>The TXT record should contain the following information:</p>
+        <input type="text" value="code={{.Key}}" readonly>
+        <p>Please don't add extra characters to the contents of the text record.</p>
+        <p><button class="verify" data-domain="{{.UserDomain}}" data-type="txt">Verify with TXT record</button></p>
+    </section>
+    <section class="grid-1000 verification-result">
         <h2>Verification result</h2>
-        <p><button id="verify" data-domain="{{.UserDomain}}">Verify</button></p>
-        <hr>
-        <div class="result"></div>
-        <div id="congrats">Congrats, you've successfully verified your domain. You can now use the shared key above in your applications. <div class="alert"><strong>Important!</strong> Please delete the verification file as soon as possible to ensure nobody else can access the shared key.</div></div>
+        <p>The result of the verification and, if successful, the shared key will be displayed below once you have chosen a verification method.
+        <div class="result"><p class="header"></p><div id="congrats">Congrats, you've successfully verified your domain. You can now use the shared key below in your applications. <div class="alert"><strong>Important!</strong> Please delete the verification file/remove the TXT record as soon as possible to ensure nobody else can access the shared key.</div></div>
+        <p class="details"></p></div>
     </section>
 </main>
 {{end}}
@@ -20,17 +30,30 @@
 {{define "scripts"}}
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script type="text/javascript">
-    $("#congrats").hide();
-    function checkVerificationStatus() {
-        $.post( "/api/domain/verify", {domain: $("#verify").data("domain")}).done(function(data) {
-            $(".result").html("Your shared key is " + data);
-            $("#congrats").slideDown();
-        }).fail(function(xhr, textStatus, errorThrown) {
-            $(".result").html("Check failed: " + xhr.responseText);
+    $(function () {
+        $("#congrats").hide();
+        var $result = $(".result");
+        var $resultHeader = $(".result .header");
+
+        function checkVerificationStatus(type) {
+            $.post( "/api/domain/verify", {domain: $(".verify").data("domain"), verificationType: type}).done(function(data) {
+                console.log("Success!");
+                $(".details").text("Your shared key is " + data);
+                $resultHeader.text("Verification was successful!");
+                $("#congrats").slideDown();
+            }).fail(function(xhr, textStatus, errorThrown) {
+                console.log("Fail!");
+                $(".details").text(xhr.responseText);
+                $("#congrats").slideUp();
+                $resultHeader.text("Verification was unsuccessful");
+            });
+        }
+        $(".verify").click(function () {
+            $result.show();
+            $resultHeader.text("Loading...");
+            checkVerificationStatus($(this).data("type"));
         });
-    }
-    $("#verify").click(function () {
-        checkVerificationStatus();
+        $result.hide();
     });
 </script>
 {{end}}
