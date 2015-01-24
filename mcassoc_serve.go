@@ -27,6 +27,7 @@ import (
 	"path"
 	"time"
 	"strings"
+	"crypto/rand"
 )
 
 var sesskey []byte
@@ -74,10 +75,10 @@ func generateSharedKey(siteid string) []byte {
 	return key
 }
 
-func generateDomainVerificationKey(domain string, ip string) []byte {
+func generateDomainVerificationKey(domain string, ip string, sessionId string) []byte {
 	z := hmac.New(sha512.New, dvKey)
 	t := time.Now()
-	keyContents := domain + t.Format("20060102") + ip
+	keyContents := domain + t.Format("20060102") + ip + sessionId
 	z.Write([]byte(keyContents))
 	key := z.Sum([]byte("  ")) // pad it so we never get equals signs (TXT records love those)
 	return key
@@ -171,6 +172,7 @@ func getActualRemoteAddr(r *http.Request) string {
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	//TODO: DRY
+	sessionId := addSessionIdIfNotExists(w, r)
 	if r.Method != "POST" {
 		w.Header().Set("Allow", "POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -191,7 +193,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	data := generateDomainVerificationKey(domain, getActualRemoteAddr(r));
+	data := generateDomainVerificationKey(domain, getActualRemoteAddr(r), sessionId);
 
 	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/verification.html"))
 	value := base64.URLEncoding.EncodeToString(data)
@@ -232,7 +234,7 @@ func ApiDomainVerificationDns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := "code=" + base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain, getActualRemoteAddr(r)))
+	key := "code=" + base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain, getActualRemoteAddr(r), getSessionId(r)))
 	if key != txtContents {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("The TXT record contents was " + txtContents + " but the expected value was " + key))
@@ -243,7 +245,45 @@ func ApiDomainVerificationDns(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func addSessionIdIfNotExists(w http.ResponseWriter, r *http.Request) string {
+	if !hasSessionId(r) {
+		return generateSessionId(w)
+	}
+	return getSessionId(r)
+}
+
+func hasSessionId(r *http.Request) bool {
+	return getSessionId(r) != ""
+}
+
+func getSessionId(r *http.Request) string {
+	cookie, err := r.Cookie("SessionId")
+	if err == nil && cookie != nil {
+		return cookie.Value
+	}
+	return ""
+}
+
+func generateSessionId(w http.ResponseWriter) string {
+	bytes := make([]byte, 10)
+
+	_, err := rand.Read(bytes)
+	if err != nil {
+		log.Println("Random generation failed.")
+	}
+	stringId := base64.URLEncoding.EncodeToString(bytes)
+	cookie := &http.Cookie{Name: "SessionId", Value: stringId}
+	http.SetCookie(w, cookie)
+	return stringId
+}
+
 func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
+	if !hasSessionId(r) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("Cookies must be enabled to perform verification."))
+		return
+	}
+
 	err := r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -257,6 +297,7 @@ func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method != "POST" {
 		w.Header().Set("Allow", "POST")
+
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("must be a POST request"))
 		return
@@ -265,7 +306,7 @@ func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
 
 
 	domain := r.Form.Get("domain")
-	key := base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain, getActualRemoteAddr(r)))
+	key := base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain, getActualRemoteAddr(r), getSessionId(r)))
 	url := getDomainVerificationUrl(domain, key)
 	var resp *http.Response
 	resp, err = http.Get(url)
@@ -658,6 +699,7 @@ func myinit() {
 	log.Println("Set authentication key", flagAuthenticationKey)
 	log.Println("Set domain verification key", flagDomainVerificationKey)
 	log.Println("Going to listen at", httplistenloc)
+
 }
 
 func main() {
