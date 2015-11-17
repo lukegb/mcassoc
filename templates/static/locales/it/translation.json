@@ -1,0 +1,54 @@
+{
+	"localiser": {
+		"credit": "Luke Granger-Brown"
+	},
+	"please_wait": "Solo un momento..",
+	"step1": {
+		"header": [
+			"Ciao! Stai per associare un account di Minecraft nel sito.<br>",
+			"Per procedere, Devi rispondere a alcune domande."
+		],
+		"error": "<strong>Whoops!</strong> Non riesco a trovare nessun account con quel nome. Mi dispiace.",
+		"textbox": "Quale è il tuo nome del tuo account Minecraft?",
+		"button": "Avanti"
+	},
+	"step2_register": {
+		"header": [
+			"Vedo che non lo hai mai fatto.<br>",
+			"Digita una password <strong>provisoria che servirà per recuperare questo pasaggio in caso di problemi</strong>.<br>",
+			"Sarai in grado di usarla se devi rifare questo processo."
+		],
+		"error": "Erm, cosa?",
+		"textbox": "Digita una password:",
+		"button": "Avanti"
+	},
+	"step2_login": {
+		"header": [
+			"<strong>Bentornato!</strong> Vedo che hai già eseguito questo passaggio.<br>",
+			"Per conitinuare, digita la tua pass della prima associazione."
+		],
+		"error": "<strong>Whoops!</strong> Non è giusto. Riprova, se non la ricordi, clicca qui per <a href=\"javascript:;\" class=\"forgotten\">resetare la password</a>.",
+		"textbox": "Digita la pass per la associazione:",
+		"button": "Avanti",
+		"forgotten_link": "MI sono dimenticato la pass/Non la ho mai avuta"
+	},
+	"step3": {
+		"header": [
+			"<strong>Ultimo passaggio!</strong> Hai quasi finito.<br>",
+			"Per verificare il tuo account, Devi cambiare la tua skin.<br>",
+			"Clicca questo bottoncino per collegarti a Minecraft.net - logga, e accetta il cambiamento skin.<br>",
+			"<br>",
+			"Se vuoi manterenere la stessas skin, la prossima volta che associerai il tuo account con il sito, ti sarà richiesto solo la pass della associazione, e sarà fatta!"
+		],
+		"button": "Cambia la Skin Minecraft",
+		"text": "Una volta fatto il cambiamento, chiudi questa finestra e completerò il processo. Richiederà solo qualche secondo una volta accettata la skin!"
+	},
+	"fatal_error": {
+		"header": "Mi dispiace...",
+		"text": "Ci è stato un problema. Riprova."
+	},
+	"branding": {
+		"header": "Minecraft Account Association",
+		"footer": "MCAssoc: an open service. Want in? Talk to me on IRC (lukegb@Esper) or <a href=\"mailto:mcassoc@lukegb.com\">by email</a>."
+	}
+}
