@@ -68,11 +68,7 @@ func (pc *ProfileClient) GetProfile(uuid string) (Profile, error) {
 
 func NewProfileClient() *ProfileClient {
 	return &ProfileClient{
-		c: &http.Client{
-			Transport: &http.Transport{
-				DisableKeepAlives: false,
-			},
-		},
+		c: http.DefaultClient,
 		x: make(ProfileCache),
 	}
 }
