@@ -2,12 +2,12 @@ package minecraft
 
 import (
 	"encoding/json"
-	"time"
 	"errors"
 	"fmt"
-	"log"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"time"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 
 type ProfileCacheEntry struct {
 	profile Profile
-	expiry time.Time
+	expiry  time.Time
 }
 
 type ProfileCache map[string]ProfileCacheEntry
@@ -57,9 +57,9 @@ func (pc *ProfileClient) GetProfile(uuid string) (Profile, error) {
 	}
 
 	// cache it
-	cacheEntry := ProfileCacheEntry {
+	cacheEntry := ProfileCacheEntry{
 		profile: profile,
-		expiry: time.Now().Add(1 * time.Hour),
+		expiry:  time.Now().Add(1 * time.Hour),
 	}
 	pc.x[uuid] = cacheEntry
 

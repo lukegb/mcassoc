@@ -2,14 +2,15 @@ package main
 
 import (
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"encoding/hex"
 	"github.com/gorilla/mux"
 	mcassoc "github.com/lukegb/mcassoc/mcassoc"
 	minecraft "github.com/lukegb/mcassoc/minecraft"
@@ -20,14 +21,13 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
-	"net"
 	"os"
 	"path"
-	"time"
 	"strings"
-	"crypto/rand"
+	"time"
 )
 
 var sesskey []byte
@@ -152,16 +152,15 @@ func unwrapSkinColour(vs Gettable) SkinColour {
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/signup.html"))
 
-
 	t.ExecuteTemplate(w, "layout", TemplateData{
 		PageData: TemplatePageData{
-		Title: "Minecraft Account Association",
-	},
+			Title: "Minecraft Account Association",
+		},
 		Data: struct {
-				HasError bool
-			}{
-				HasError: r.FormValue("err") == "domain",
-	},
+			HasError bool
+		}{
+			HasError: r.FormValue("err") == "domain",
+		},
 	})
 }
 
@@ -192,23 +191,22 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	data := generateDomainVerificationKey(domain, getActualRemoteAddr(r), sessionId);
+	data := generateDomainVerificationKey(domain, getActualRemoteAddr(r), sessionId)
 
 	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/verification.html"))
 	value := base64.URLEncoding.EncodeToString(data)
 	t.ExecuteTemplate(w, "layout", TemplateData{
 		PageData: TemplatePageData{
-		Title: "Minecraft Account Association",
-	},
+			Title: "Minecraft Account Association",
+		},
 		Data: struct {
-				Key string
-				URL string
-				UserDomain string
-			}{
-				Key: value,
-				URL: "http://" + domain + "/mcassoc-" + value + ".txt",
-				UserDomain: domain,
+			Key        string
+			URL        string
+			UserDomain string
+		}{
+			Key:        value,
+			URL:        "http://" + domain + "/mcassoc-" + value + ".txt",
+			UserDomain: domain,
 		},
 	})
 }
@@ -292,7 +290,7 @@ func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Form.Get("verificationType") == "txt" {
-		ApiDomainVerificationDns(w, r);
+		ApiDomainVerificationDns(w, r)
 		return
 	}
 	if r.Method != "POST" {
@@ -302,8 +300,6 @@ func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("must be a POST request"))
 		return
 	}
-
-
 
 	domain := r.Form.Get("domain")
 	key := base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain, getActualRemoteAddr(r), getSessionId(r)))

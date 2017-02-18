@@ -13,7 +13,7 @@ func GetSkin(pc Profile) (image.Image, error) {
 	}
 
 	if skin, ok := td.Textures["SKIN"]; !ok {
-		return nil, ERR_HAS_NO_SKIN
+		return fallbackSkin(pc)
 	} else {
 		resp, err := http.Get(skin.Url)
 		if err != nil {

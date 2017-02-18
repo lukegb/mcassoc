@@ -24,13 +24,13 @@ func (hpr HttpProfileRepository) GetProfilesByUsername(usernames []string) (prof
 	log.Println(LOG_TAG, "fetching profiles by usernames:", usernames)
 
 	for startAt := 0; startAt < len(usernames); startAt += PROFILES_PER_REQUEST {
-		endAt := startAt+PROFILES_PER_REQUEST
+		endAt := startAt + PROFILES_PER_REQUEST
 		if endAt > len(usernames) {
 			endAt = len(usernames)
 		}
 
 		var jsonCriteria []byte
-		if jsonCriteria, err = json.Marshal(usernames[startAt : endAt]); err != nil {
+		if jsonCriteria, err = json.Marshal(usernames[startAt:endAt]); err != nil {
 			return nil, err
 		}
 
