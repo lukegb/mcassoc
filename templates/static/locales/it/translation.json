@@ -2,11 +2,11 @@
 	"localiser": {
 		"credit": "xion87"
 	},
-	"please_wait": "Solo un momento..",
+	"please_wait": "Solo un momento...",
 	"step1": {
 		"header": [
 			"Ciao! Stai per associare un account di Minecraft nel sito.<br>",
-			"Per procedere, Devi rispondere a alcune domande."
+			"Per procedere, devi rispondere ad alcune domande."
 		],
 		"error": "<strong>Whoops!</strong> Non riesco a trovare nessun account con quel nome. Mi dispiace.",
 		"textbox": "Quale è il tuo nome del tuo account di Minecraft?",
@@ -15,10 +15,10 @@
 	"step2_register": {
 		"header": [
 			"Vedo che non lo hai mai fatto.<br>",
-			"Digita una password <strong>provisoria che servirà per riassocciare l'account in futuro</strong>.<br>",
+			"Digita una password <strong>provvisoria che servirà per riassociare l'account in futuro</strong>.<br>",
 			"Sarai in grado di usarla senza fare la verifica."
 		],
-		"error": "Erm, cosa?",
+		"error": "Ehm, cosa?",
 		"textbox": "Digita una password:",
 		"button": "Avanti"
 	},
@@ -27,25 +27,25 @@
 			"<strong>Bentornato!</strong> Vedo che hai già eseguito questo passaggio.<br>",
 			"Per continuare, digita la tua password della prima associazione."
 		],
-		"error": "<strong>Ops!</strong> Non è giusta. Riprova, se non la ricordi, clicca qui per <a href=\"javascript:;\" class=\"forgotten\">resetare la password</a>.",
-		"textbox": "Digita la pass per la associazione:",
+		"error": "<strong>Ops!</strong> Non è giusta. Riprova, se non la ricordi, clicca qui per <a href=\"javascript:;\" class=\"forgotten\">resettare la password</a>.",
+		"textbox": "Digita la password per la associazione:",
 		"button": "Avanti",
-		"forgotten_link": "Mi sono dimenticato la pass/Non la ho mai avuta"
+		"forgotten_link": "Mi sono dimenticato la password/Non l'ho mai avuta"
 	},
 	"step3": {
 		"header": [
 			"<strong>Ultimo passaggio!</strong> Hai quasi finito.<br>",
 			"Per verificare il tuo account, devi cambiare la tua skin.<br>",
-			"Clicca questo bottoncino per collegarti a Minecraft.net - logga, e accetta il cambiamento skin.<br>",
+			"Clicca questo pulsante per collegarti a Minecraft.net, effettua il login, e accetta il cambiamento skin.<br>",
 			"<br>",
-			"La prossima volta che ri-associerai il tuo account con il sito, ti sarà richiesto solo la password della associazione, e sarà fatta!"
+			"La prossima volta che riassocerai il tuo account con il sito, ti sarà richiesta solo la password della associazione, e sarà fatta!"
 		],
 		"button": "Cambia la Skin Minecraft",
 		"text": "Una volta fatto il cambio skin, attendi lasciando aperta questa finestra. Richiederà solo qualche secondo una volta accettata la skin!"
 	},
 	"fatal_error": {
 		"header": "Mi dispiace...",
-		"text": "Ci è stato un problema. Riprova."
+		"text": "C'è stato un problema. Riprova."
 	},
 	"branding": {
 		"header": "Verifica Account Premium Minecraft",
