@@ -5,3 +5,5 @@ mcassoc is a free service that allows you to add Minecraft account association t
 Integration is simple and sample code is available in both PHP and Python.
 
 To learn more and get your shared key, visit [mcassoc.lukegb.com](https://mcassoc.lukegb.com/)
+
+This is not an official Google product.

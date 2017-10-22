@@ -674,7 +674,7 @@ func bucket(req *http.Request) (*storage.BucketHandle, error) {
 	if err != nil {
 		return nil, err
 	}
-	return client.Bucket("mcassoc-temp"), nil
+	return client.Bucket("mcassoc-ng.appspot.com"), nil
 }
 
 func init() {
