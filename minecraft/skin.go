@@ -8,7 +8,10 @@ import (
 
 func GetSkin(c *http.Client, pc Profile) (image.Image, error) {
 	td, err := pc.Textures()
-	if err != nil {
+	switch {
+	case err == ERR_HAS_NO_SKIN:
+		return fallbackSkin(c, pc)
+	case err != nil:
 		return nil, err
 	}
 

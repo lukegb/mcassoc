@@ -37,13 +37,13 @@ func (pc Profile) Textures() (*ProfilePropertyTextures, error) {
 				return nil, err
 			}
 
-			pps := new(ProfilePropertyTextures)
+			var pps ProfilePropertyTextures
 			err = json.Unmarshal(decValue, &pps)
 			if err != nil {
 				return nil, err
 			}
 
-			return pps, nil
+			return &pps, nil
 		}
 	}
 
