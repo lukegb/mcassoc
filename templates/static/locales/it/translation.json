@@ -41,14 +41,14 @@
 			"La prossima volta che riassocerai il tuo account con il sito, ti sarà richiesta solo la password della associazione, e sarà fatta!"
 		],
 		"button": "Cambia la Skin Minecraft",
-		"text": "Una volta fatto il cambiamento, chiudi questa finestra e completerò il processo. Richiederà solo qualche secondo una volta accettata la skin!"
+		"text": "Una volta fatto il cambio skin, attendi lasciando aperta questa finestra. Richiederà solo qualche secondo una volta accettata la skin!"
 	},
 	"fatal_error": {
 		"header": "Mi dispiace...",
 		"text": "C'è stato un problema. Riprova."
 	},
 	"branding": {
-		"header": "Minecraft Account Association",
-		"footer": "MCAssoc: un servizio open source. Vuoi entrare? Contattami su IRC (lukegb@Esper) o mandami una email <a href=\"mailto:mcassoc@lukegb.com\"></a>."
+		"header": "Verifica Account Premium Minecraft",
+		"footer": "MCAssoc: un servizio aperto. Contattami su IRC (lukegb@Esper) o <a href=\"mailto:mcassoc@lukegb.com\">via e-mail</a>."
 	}
 }
