@@ -1,6 +1,7 @@
 package mcassoc
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha1"
@@ -13,7 +14,6 @@ import (
 	"html/template"
 	"image/png"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -112,12 +112,9 @@ func getOr(vs Gettable, what string, def string) string {
 	return val
 }
 
-func isDomainValid(domain string) bool {
-	_, err := net.LookupIP(domain)
-	if err != nil {
-		return false
-	}
-	return true
+func isDomainValid(ctx context.Context, domain string) bool {
+	_, err := lookupIP(ctx, domain)
+	return err == nil
 }
 
 func getDomainVerificationUrl(domain string, code string) string {
@@ -187,7 +184,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	domain := r.Form.Get("domain")
-	if !isDomainValid(domain) {
+	if !isDomainValid(appengine.NewContext(r), domain) {
 		http.Redirect(w, r, "/?err=domain", 301)
 		return
 	}
@@ -215,8 +212,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 func ApiDomainVerificationDns(w http.ResponseWriter, r *http.Request) {
 	domain := r.Form.Get("domain")
 	var txtContentsArray []string
-	var err error
-	txtContentsArray, err = net.LookupTXT("mcassocverify." + domain)
+	txtContentsArray, err := lookupTXT(appengine.NewContext(r), "mcassocverify."+domain)
 	if len(txtContentsArray) != 1 {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("Invalid number of TXT records (" + fmt.Sprintf("%v", len(txtContentsArray)) + ") for name " + "mcassocverify." + domain + "."))
