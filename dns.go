@@ -7,6 +7,7 @@ import (
 
 	"github.com/miekg/dns"
 
+	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/socket"
 )
 
@@ -18,6 +19,10 @@ func lookupIP(ctx context.Context, host string) (addrs []net.IP, err error) {
 
 func lookupTXT(ctx context.Context, host string) ([]string, error) {
 	msg := &dns.Msg{
+		MsgHdr: dns.MsgHdr{
+			RecursionDesired: true,
+			CheckingDisabled: false,
+		},
 		Question: []dns.Question{{
 			Name:   dns.Fqdn(host),
 			Qtype:  dns.TypeTXT,
@@ -34,6 +39,7 @@ func lookupTXT(ctx context.Context, host string) ([]string, error) {
 
 	dnsc := &dns.Conn{Conn: conn}
 	defer dnsc.Close()
+	log.Debugf(ctx, "Making DNS query: %v", msg)
 	if err := dnsc.WriteMsg(msg); err != nil {
 		return nil, fmt.Errorf("dnsc.WriteMsg(%v): %v", msg, err)
 	}
@@ -41,6 +47,7 @@ func lookupTXT(ctx context.Context, host string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("dnsc.ReadMsg(): %v", err)
 	}
+	log.Debugf(ctx, "Got DNS response: %v", rmsg)
 
 	var answers []string
 	for _, m := range rmsg.Answer {
@@ -54,5 +61,6 @@ func lookupTXT(ctx context.Context, host string) ([]string, error) {
 		}
 		answers = append(answers, m.Txt...)
 	}
+	log.Debugf(ctx, "Extracted TXTs: %v", answers)
 	return answers, nil
 }
