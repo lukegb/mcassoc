@@ -4,12 +4,16 @@ api_version: go1.8
 handlers:
 - url: /static
   static_dir: templates/static
+  secure: always
 
 - url: /img
   static_dir: templates/img
+  secure: always
 
 - url: /css
   static_dir: templates/css
+  secure: always
 
 - url: /.*
   script: _go_app
+  secure: always
