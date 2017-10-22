@@ -1,7 +1,9 @@
 package mojang
 
-func GetProfileByUsername(username string) (Profile, error) {
-	hpr := NewHttpProfileRepository()
+import "net/http"
+
+func GetProfileByUsername(c *http.Client, username string) (Profile, error) {
+	hpr := NewHttpProfileRepository(c)
 	profiles, err := hpr.GetProfilesByUsername([]string{username})
 	if err != nil {
 		return Profile{}, err

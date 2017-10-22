@@ -27,8 +27,8 @@ func isAlex(pc Profile) bool {
 	return (isEven(uuid[7]) != isEven(uuid[16+7])) != (isEven(uuid[15]) != isEven(uuid[16+15]))
 }
 
-func downloadSkin(url string) (image.Image, error) {
-	resp, err := http.Get(url)
+func downloadSkin(c *http.Client, url string) (image.Image, error) {
+	resp, err := c.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -38,10 +38,10 @@ func downloadSkin(url string) (image.Image, error) {
 	return img, err
 }
 
-func fallbackSkin(pc Profile) (image.Image, error) {
+func fallbackSkin(c *http.Client, pc Profile) (image.Image, error) {
 	if isAlex(pc) {
-		return downloadSkin(alexURL)
+		return downloadSkin(c, alexURL)
 	} else {
-		return downloadSkin(steveURL)
+		return downloadSkin(c, steveURL)
 	}
 }

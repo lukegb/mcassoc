@@ -23,17 +23,16 @@ type ProfileCacheEntry struct {
 type ProfileCache map[string]ProfileCacheEntry
 
 type ProfileClient struct {
-	c *http.Client
 	x ProfileCache
 }
 
-func (pc *ProfileClient) GetProfile(uuid string) (Profile, error) {
+func (pc *ProfileClient) GetProfile(c *http.Client, uuid string) (Profile, error) {
 	var err error
 
 	log.Println("Requesting profile for", uuid)
 
 	var resp *http.Response
-	if resp, err = pc.c.Get(fmt.Sprintf(PROFILE_URL_FMT, SESSION_SERVER, uuid)); err != nil {
+	if resp, err = c.Get(fmt.Sprintf(PROFILE_URL_FMT, SESSION_SERVER, uuid)); err != nil {
 		return Profile{}, err
 	}
 	defer resp.Body.Close()
@@ -68,11 +67,10 @@ func (pc *ProfileClient) GetProfile(uuid string) (Profile, error) {
 
 func NewProfileClient() *ProfileClient {
 	return &ProfileClient{
-		c: http.DefaultClient,
 		x: make(ProfileCache),
 	}
 }
 
-func GetProfile(uuid string) (Profile, error) {
-	return NewProfileClient().GetProfile(uuid)
+func GetProfile(c *http.Client, uuid string) (Profile, error) {
+	return NewProfileClient().GetProfile(c, uuid)
 }
