@@ -6,16 +6,16 @@ import (
 	"net/http"
 )
 
-func GetSkin(pc Profile) (image.Image, error) {
+func GetSkin(c *http.Client, pc Profile) (image.Image, error) {
 	td, err := pc.Textures()
 	if err != nil {
 		return nil, err
 	}
 
 	if skin, ok := td.Textures["SKIN"]; !ok {
-		return fallbackSkin(pc)
+		return fallbackSkin(c, pc)
 	} else {
-		resp, err := http.Get(skin.Url)
+		resp, err := c.Get(skin.Url)
 		if err != nil {
 			return nil, err
 		}

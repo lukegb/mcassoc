@@ -1,0 +1,15 @@
+runtime: go
+api_version: go1.8
+
+handlers:
+- url: /static
+  static_dir: templates/static
+
+- url: /img
+  static_dir: templates/img
+
+- url: /css
+  static_dir: templates/css
+
+- url: /.*
+  script: _go_app

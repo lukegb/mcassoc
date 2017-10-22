@@ -68,8 +68,8 @@ func (hpr HttpProfileRepository) getProfilesByUsernamePage(jsonCriteria []byte) 
 	return result, nil
 }
 
-func NewHttpProfileRepository() HttpProfileRepository {
+func NewHttpProfileRepository(c *http.Client) HttpProfileRepository {
 	return HttpProfileRepository{
-		c: http.DefaultClient,
+		c: c,
 	}
 }
