@@ -2,7 +2,8 @@ package minecraft
 
 import (
 	"image"
-	"image/png"
+	_ "image/jpeg"
+	_ "image/png"
 	"net/http"
 )
 
@@ -24,6 +25,7 @@ func GetSkin(c *http.Client, pc Profile) (image.Image, error) {
 		}
 		defer resp.Body.Close()
 
-		return png.Decode(resp.Body)
+		img, _, err := image.Decode(resp.Body)
+		return img, err
 	}
 }
