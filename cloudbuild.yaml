@@ -1,4 +1,17 @@
 steps:
+# Decrypt keys.go.enc into keys.go
+- name: "gcr.io/cloud-builders/gcloud"
+  args:
+  - kms
+  - decrypt
+  - --ciphertext-file=keys.go.enc
+  - --plaintext-file=keys.go
+  - --location=global
+  - --keyring=cloudbuild
+  - --key=cloudbuild-enc
+
+# Launch the AppEngine deploy
 - name: "gcr.io/cloud-builders/gcloud"
   args: ["app", "deploy"]
+
 timeout: "1600s"
