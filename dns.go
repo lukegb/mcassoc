@@ -1,4 +1,4 @@
-package mcassoc
+package main
 
 import (
 	"context"

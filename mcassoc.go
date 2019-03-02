@@ -1,4 +1,4 @@
-package mcassoc
+package main
 
 import (
 	"context"
@@ -691,7 +691,9 @@ func init() {
 	/*log.Debugf(appengine.NewContext(r), "%s", fmt.Sprintln("Set session key", string(sesskey)))
 	log.Debugf(appengine.NewContext(r), "%s", fmt.Sprintln("Set authentication key", authkey))
 	log.Debugf(appengine.NewContext(r), "%s", fmt.Sprintln("Set domain verification key", string(dvKey)))*/
+}
 
+func Handler() http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomePage)
 	r.HandleFunc("/signup", SignUp)
@@ -701,8 +703,15 @@ func init() {
 	r.HandleFunc("/api/user/check", ApiCheckUserPage)
 	r.HandleFunc("/api/user/create", ApiCreateUserPage)
 	r.HandleFunc("/api/user/authenticate", ApiAuthenticateUserPage)
-	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("./templates/")))
-	r.PathPrefix("/css/").Handler(http.FileServer(http.Dir("./templates/")))
-	r.PathPrefix("/img/").Handler(http.FileServer(http.Dir("./templates/")))
-	http.Handle("/", r)
+	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir("templates/")))
+	r.PathPrefix("/css/").Handler(http.FileServer(http.Dir("templates/")))
+	r.PathPrefix("/img/").Handler(http.FileServer(http.Dir("templates/")))
+	return r
+}
+
+func main() {
+	handler := Handler()
+	http.Handle("/", handler)
+
+	appengine.Main()
 }
