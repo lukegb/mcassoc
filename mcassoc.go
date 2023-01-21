@@ -186,7 +186,9 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	domain := r.Form.Get("domain")
-	if !isDomainValid(appengine.NewContext(r), domain) {
+	// RFC2606: .test, .example, .invalid, .localhost
+	isTestDomain := strings.HasSuffix(domain, ".test") || strings.HasSuffix(domain, ".example") || strings.HasSuffix(domain, ".invalid") || strings.HasSuffix(domain, ".localhost")
+	if !isTestDomain && !isDomainValid(ctx, domain) {
 		http.Redirect(w, r, "/?err=domain", 301)
 		return
 	}
@@ -195,6 +197,12 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	t := template.Must(template.ParseFiles("templates/frontbase.html", "templates/verification.html"))
 	value := base64.URLEncoding.EncodeToString(data)
+
+	var testKey string
+	if isTestDomain {
+		testKey = hex.EncodeToString(generateSharedKey(domain))
+	}
+
 	t.ExecuteTemplate(w, "layout", TemplateData{
 		PageData: TemplatePageData{
 			Title: "Minecraft Account Association",
@@ -203,10 +211,16 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 			Key        string
 			URL        string
 			UserDomain string
+
+			IsTestDomain bool
+			TestKey      string
 		}{
 			Key:        value,
 			URL:        "http://" + domain + "/mcassoc-" + value + ".txt",
 			UserDomain: domain,
+
+			IsTestDomain: isTestDomain,
+			TestKey:      testKey,
 		},
 	})
 }
