@@ -30,7 +30,7 @@
 		"error": "<strong>Whoops!</strong> I don't think that was correct. If you can't remember what it was, or you haven't associated your account before, please <a href=\"javascript:;\" class=\"forgotten\">reset your password</a>.",
 		"textbox": "Enter your Minecraft Associator password:",
 		"button": "Next",
-		"forgotten_link": "I've forgotten in/I haven't done this before"
+		"forgotten_link": "I've forgotten it/I haven't done this before"
 	},
 	"step3": {
 		"header": [

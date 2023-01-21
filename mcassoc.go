@@ -14,14 +14,14 @@ import (
 	"html/template"
 	"image/png"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/urlfetch"
+	"google.golang.org/appengine/v2/urlfetch"
 
 	"cloud.google.com/go/storage"
 
@@ -168,6 +168,8 @@ func getActualRemoteAddr(r *http.Request) string {
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	//TODO: DRY
 	sessionId := addSessionIdIfNotExists(w, r)
 	if r.Method != "POST" {
@@ -210,9 +212,10 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func ApiDomainVerificationDns(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	domain := r.Form.Get("domain")
 	var txtContentsArray []string
-	txtContentsArray, err := lookupTXT(appengine.NewContext(r), "mcassocverify."+domain)
+	txtContentsArray, err := lookupTXT(ctx, "mcassocverify."+domain)
 	if len(txtContentsArray) != 1 {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("Invalid number of TXT records (" + fmt.Sprintf("%v", len(txtContentsArray)) + ") for name " + "mcassocverify." + domain + "."))
@@ -273,6 +276,8 @@ func generateSessionId(w http.ResponseWriter) string {
 }
 
 func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	if !hasSessionId(r) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("Cookies must be enabled to perform verification."))
@@ -302,7 +307,7 @@ func ApiDomainVerification(w http.ResponseWriter, r *http.Request) {
 	key := base64.URLEncoding.EncodeToString(generateDomainVerificationKey(domain, getActualRemoteAddr(r), getSessionId(r)))
 	url := getDomainVerificationUrl(domain, key)
 	var resp *http.Response
-	resp, err = urlfetch.Client(appengine.NewContext(r)).Get(url)
+	resp, err = urlfetch.Client(ctx).Get(url)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("An error was encountered in opening a connection."))
@@ -430,6 +435,8 @@ func PerformPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	if r.Method != "POST" {
 		w.Header().Set("Allow", "POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -449,7 +456,7 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 	mcusername := r.Form.Get("mcusername")
 
 	// get their uuid from mojang
-	user, err := mojang.GetProfileByUsername(urlfetch.Client(appengine.NewContext(r)), mcusername)
+	user, err := mojang.GetProfileByUsername(urlfetch.Client(ctx), mcusername)
 	if err != nil {
 		if err == mojang.ERR_NO_SUCH_USER {
 			je.Encode(struct {
@@ -461,7 +468,7 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 		} else {
 			statkeeper.GLOBAL.MojangRequestFail()
 			statkeeper.GLOBAL.AssocFail()
-			log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while getting mojang profile", mcusername, err))
+			log.Printf("%s", fmt.Sprintln("error while getting mojang profile", mcusername, err))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -470,10 +477,10 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// so we can get their skin data
-	mcprofile, err := profileClient.GetProfile(urlfetch.Client(appengine.NewContext(r)), user.Id)
+	mcprofile, err := profileClient.GetProfile(urlfetch.Client(ctx), user.Id)
 	if err != nil {
 		statkeeper.GLOBAL.McRequestOK()
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while getting minecraft profile", mcusername, user.Id, err))
+		log.Printf("%s", fmt.Sprintln("error while getting minecraft profile", mcusername, user.Id, err))
 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -483,9 +490,9 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// so we can get their skin
-	skinim, err := minecraft.GetSkin(urlfetch.Client(appengine.NewContext(r)), mcprofile)
+	skinim, err := minecraft.GetSkin(urlfetch.Client(ctx), mcprofile)
 	if err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while getting skin", mcusername, user.Id, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error while getting skin", mcusername, user.Id, mcprofile, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -503,6 +510,8 @@ func ApiCheckUserPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	if r.Method != "POST" {
 		w.Header().Set("Allow", "POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -522,27 +531,27 @@ func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
 	uuid := r.Form.Get("uuid")
 	password := r.Form.Get("password")
 
-	mcprofile, err := profileClient.GetProfile(urlfetch.Client(appengine.NewContext(r)), uuid)
+	mcprofile, err := profileClient.GetProfile(urlfetch.Client(ctx), uuid)
 	if err != nil {
 		statkeeper.GLOBAL.McRequestFail()
 		statkeeper.GLOBAL.AssocFail()
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while getting minecraft profile", uuid, err))
+		log.Printf("%s", fmt.Sprintln("error while getting minecraft profile", uuid, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else {
 		statkeeper.GLOBAL.McRequestOK()
 	}
 
-	skinim, err := minecraft.GetSkin(urlfetch.Client(appengine.NewContext(r)), mcprofile)
+	skinim, err := minecraft.GetSkin(urlfetch.Client(ctx), mcprofile)
 	if err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while getting skin", uuid, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error while getting skin", uuid, mcprofile, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	passwordok, err := authenticator.Verify(password, skinim)
 	if err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error verifying datablock", uuid, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error verifying datablock", uuid, mcprofile, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -585,7 +594,7 @@ func ApiAuthenticateUserPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func ApiCreateUserPage(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
+	ctx := r.Context()
 	if r.Method != "POST" {
 		w.Header().Set("Allow", "POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -605,27 +614,27 @@ func ApiCreateUserPage(w http.ResponseWriter, r *http.Request) {
 	uuid := r.Form.Get("uuid")
 	password := r.Form.Get("password")
 
-	mcprofile, err := profileClient.GetProfile(urlfetch.Client(appengine.NewContext(r)), uuid)
+	mcprofile, err := profileClient.GetProfile(urlfetch.Client(ctx), uuid)
 	if err != nil {
 		statkeeper.GLOBAL.McRequestFail()
 		statkeeper.GLOBAL.AssocFail()
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while getting minecraft profile", uuid, err))
+		log.Printf("%s", fmt.Sprintln("error while getting minecraft profile", uuid, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else {
 		statkeeper.GLOBAL.McRequestOK()
 	}
 
-	skinim, err := minecraft.GetSkin(urlfetch.Client(appengine.NewContext(r)), mcprofile)
+	skinim, err := minecraft.GetSkin(urlfetch.Client(ctx), mcprofile)
 	if err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while getting skin", uuid, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error while getting skin", uuid, mcprofile, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	authedim, err := authenticator.Embed(password, skinim)
 	if err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while embedding into skin", uuid, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error while embedding into skin", uuid, mcprofile, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -633,7 +642,7 @@ func ApiCreateUserPage(w http.ResponseWriter, r *http.Request) {
 	newFilename := fmt.Sprintf("%s.png", uuid)
 	b, err := bucket(r)
 	if err != nil {
-		log.Errorf(appengine.NewContext(r), "error retrieving GCS bucket", err)
+		log.Printf("error retrieving GCS bucket", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -642,21 +651,21 @@ func ApiCreateUserPage(w http.ResponseWriter, r *http.Request) {
 	imw.ContentType = "image/png"
 
 	if err := png.Encode(imw, authedim); err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error while writing authed skin image", uuid, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error while writing authed skin image", uuid, mcprofile, err))
 		imw.Close()
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if err := imw.Close(); err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error closing authed skin image writer", uuid, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error closing authed skin image writer", uuid, mcprofile, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	attrs, err := obj.Attrs(ctx)
 	if err != nil {
-		log.Errorf(appengine.NewContext(r), "%s", fmt.Sprintln("error retrieving newly-saved object attrs", uuid, mcprofile, err))
+		log.Printf("%s", fmt.Sprintln("error retrieving newly-saved object attrs", uuid, mcprofile, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -669,7 +678,7 @@ func ApiCreateUserPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func bucket(req *http.Request) (*storage.BucketHandle, error) {
-	ctx := appengine.NewContext(req)
+	ctx := req.Context()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -683,14 +692,9 @@ func init() {
 	profileClient = minecraft.NewProfileClient()
 
 	if stathatkey != "" {
-		//log.Debugf(appengine.NewContext(r), "%s", fmt.Sprintln("Initialising statistics with key", stathatkey))
 		sh := statkeeper.NewStatHatStatKeeper(stathatkey)
 		statkeeper.GLOBAL = sh
 	}
-
-	/*log.Debugf(appengine.NewContext(r), "%s", fmt.Sprintln("Set session key", string(sesskey)))
-	log.Debugf(appengine.NewContext(r), "%s", fmt.Sprintln("Set authentication key", authkey))
-	log.Debugf(appengine.NewContext(r), "%s", fmt.Sprintln("Set domain verification key", string(dvKey)))*/
 }
 
 func Handler() http.Handler {
@@ -713,5 +717,14 @@ func main() {
 	handler := Handler()
 	http.Handle("/", handler)
 
-	appengine.Main()
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
+	}
+
+	log.Printf("Listening on port %s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("%v", err)
+	}
 }

@@ -3,18 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 
 	"github.com/miekg/dns"
-
-	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/socket"
 )
 
 const resolver = "8.8.8.8:53"
 
 func lookupIP(ctx context.Context, host string) (addrs []net.IP, err error) {
-	return socket.LookupIP(ctx, host)
+	return net.LookupIP(host)
 }
 
 func lookupTXT(ctx context.Context, host string) ([]string, error) {
@@ -31,7 +29,7 @@ func lookupTXT(ctx context.Context, host string) ([]string, error) {
 	}
 	msg.Id = dns.Id()
 
-	conn, err := socket.Dial(ctx, "udp", resolver)
+	conn, err := net.Dial("udp", resolver)
 	if err != nil {
 		return nil, fmt.Errorf("socket.Dial(%v, %v): %v", "udp", resolver, err)
 	}
@@ -39,7 +37,7 @@ func lookupTXT(ctx context.Context, host string) ([]string, error) {
 
 	dnsc := &dns.Conn{Conn: conn}
 	defer dnsc.Close()
-	log.Debugf(ctx, "Making DNS query: %v", msg)
+	log.Printf("Making DNS query: %v", msg)
 	if err := dnsc.WriteMsg(msg); err != nil {
 		return nil, fmt.Errorf("dnsc.WriteMsg(%v): %v", msg, err)
 	}
@@ -47,7 +45,7 @@ func lookupTXT(ctx context.Context, host string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("dnsc.ReadMsg(): %v", err)
 	}
-	log.Debugf(ctx, "Got DNS response: %v", rmsg)
+	log.Printf("Got DNS response: %v", rmsg)
 
 	var answers []string
 	for _, m := range rmsg.Answer {
@@ -61,6 +59,6 @@ func lookupTXT(ctx context.Context, host string) ([]string, error) {
 		}
 		answers = append(answers, m.Txt...)
 	}
-	log.Debugf(ctx, "Extracted TXTs: %v", answers)
+	log.Printf("Extracted TXTs: %v", answers)
 	return answers, nil
 }

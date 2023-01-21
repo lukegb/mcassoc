@@ -1,5 +1,13 @@
 {{define "content"}}
 <main class="grid-container">
+{{if .IsTestDomain}}
+    <section class="grid-1000 verification-result">
+        <h2>Verification result</h2>
+        <p>Because this is a test domain in a reserved TLD, you do not need to complete verification.
+        <div class="result result-dont-hide"><p class="header">Test domain key</p>
+        <p class="details">Your shared key is {{.TestKey}}</p></div>
+    </section>
+{{else}}
     <section class="grid-1000">
         <h2>Verify domain ownership with HTTP request</h2>
         <p>This is the simplest verification method. In order to verify domain ownership, please create a file at the following URL:</p>
@@ -24,6 +32,7 @@
         <div class="result"><p class="header"></p><div id="congrats">Congrats, you've successfully verified your domain. You can now use the shared key below in your applications.</div>
         <p class="details"></p></div>
     </section>
+{{end}}
 </main>
 {{end}}
 
@@ -53,7 +62,9 @@
             $resultHeader.text("Loading...");
             checkVerificationStatus($(this).data("type"));
         });
-        $result.hide();
+        if (!$result.hasClass("result-dont-hide")) {
+            $result.hide();
+        }
     });
 </script>
 {{end}}
